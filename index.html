@@ -5,7 +5,6 @@
   <title>Solicitar e Consultar Entrega</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    /* Centraliza todo o conteúdo */
     body {
       font-family: Arial, sans-serif;
       margin: 20px;
@@ -19,7 +18,6 @@
       width: 100%;
       max-width: 600px;
     }
-    /* Ajusta formulário e lista de pedidos */
     form, #listaPedidos {
       width: 100%;
       max-width: 600px;
@@ -28,7 +26,7 @@
       display: block;
       margin-top: 10px;
     }
-    form input, form textarea, form button {
+    form input, form select, form textarea, form button {
       width: 100%;
       padding: 8px;
       margin-top: 5px;
@@ -66,6 +64,13 @@
     <label for="nome">Nome do Cliente:</label>
     <input type="text" id="nome" name="nome" required />
 
+    <label for="tipo">Tipo de Local:</label>
+    <select id="tipo" name="tipo" required>
+      <option value="">Selecione...</option>
+      <option value="Casa">Casa</option>
+      <option value="Empresa">Empresa</option>
+    </select>
+
     <label for="telefone">Telefone:</label>
     <input type="tel" id="telefone" name="telefone" required />
 
@@ -93,15 +98,24 @@
       localStorage.setItem('pedidos', JSON.stringify(pedidos));
     }
 
-    // Envio de novo pedido
     form.addEventListener('submit', e => {
       e.preventDefault();
+      const nome = form.nome.value.trim();
+      const tipo = form.tipo.value;
+      const telefone = form.telefone.value.trim();
+      const enderecoColeta = form.coleta.value.trim();
+      const enderecoEntrega = form.entrega.value.trim();
+      if (!tipo) {
+        alert('Por favor, selecione o tipo de local (Casa ou Empresa).');
+        return;
+      }
       const pedidos = carregarPedidos();
       const novo = {
-        nome: form.nome.value.trim(),
-        telefone: form.telefone.value.trim(),
-        enderecoColeta: form.coleta.value.trim(),
-        enderecoEntrega: form.entrega.value.trim(),
+        nome,
+        tipo,
+        telefone,
+        enderecoColeta,
+        enderecoEntrega,
         status: 'Aguardando motoboy',
         distancia_km: null,
         taxa: null
@@ -113,7 +127,6 @@
       alert('Pedido enviado com sucesso!');
     });
 
-    // Exibe a lista de pedidos para o cliente
     function mostrarPedidos() {
       const pedidos = carregarPedidos();
       lista.innerHTML = '';
@@ -126,6 +139,7 @@
         div.className = 'pedido';
         let html = `
           <strong>Pedido #${i + 1}</strong><br/>
+          Cliente: ${p.nome} (${p.tipo}) - Tel: ${p.telefone}<br/>
           Status: <strong>${p.status}</strong><br/>
         `;
         if (p.distancia_km != null && p.taxa != null) {
@@ -140,7 +154,6 @@
       });
     }
 
-    // Carrega ao iniciar
     mostrarPedidos();
   </script>
 
