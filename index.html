@@ -2,86 +2,99 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <title>Solicitar Entrega - Sistema Simples</title>
+  <title>Solicitar e Consultar Entrega</title>
+  <link rel="stylesheet" href="style.css">
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; max-width: 600px; }
-    label { display: block; margin-top: 15px; }
-    input, textarea { width: 100%; padding: 8px; margin-top: 5px; }
-    button { margin-top: 15px; padding: 10px 20px; }
-    .pedido { border: 1px solid #ddd; padding: 10px; margin-top: 15px; }
+    /* Se quiser usar só style.css, pode remover este bloco */
+    h1, h2 { text-align: center; color: #333; }
+    .mensagem { margin-top: 8px; font-weight: bold; color: #27ae60; }
   </style>
 </head>
 <body>
 
   <h1>Solicitar Entrega</h1>
-
   <form id="formPedido">
-    <label>Nome do Cliente:
-      <input type="text" id="nome" required />
-    </label>
+    <label for="nome">Nome do Cliente:</label>
+    <input type="text" id="nome" name="nome" required />
 
-    <label>Telefone:
-      <input type="tel" id="telefone" required />
-    </label>
+    <label for="telefone">Telefone:</label>
+    <input type="tel" id="telefone" name="telefone" required />
 
-    <label>Endereço de Coleta:
-      <textarea id="enderecoColeta" rows="2" required></textarea>
-    </label>
+    <label for="coleta">Endereço de Coleta:</label>
+    <textarea id="coleta" name="coleta" rows="2" required></textarea>
 
-    <label>Endereço de Entrega:
-      <textarea id="enderecoEntrega" rows="2" required></textarea>
-    </label>
+    <label for="entrega">Endereço de Entrega:</label>
+    <textarea id="entrega" name="entrega" rows="2" required></textarea>
 
     <button type="submit">Enviar Pedido</button>
   </form>
 
-  <h2>Pedidos enviados</h2>
+  <h2>Meus Pedidos</h2>
   <div id="listaPedidos"></div>
 
   <script>
-    // Função para salvar pedido no localStorage
-    function salvarPedido(pedido) {
-      const pedidos = JSON.parse(localStorage.getItem('pedidos') || '[]');
-      pedidos.push(pedido);
+    const form = document.getElementById('formPedido');
+    const lista = document.getElementById('listaPedidos');
+
+    function carregarPedidos() {
+      return JSON.parse(localStorage.getItem('pedidos') || '[]');
+    }
+
+    function salvarPedidos(pedidos) {
       localStorage.setItem('pedidos', JSON.stringify(pedidos));
     }
 
-    // Função para carregar e mostrar pedidos
+    // Envio de novo pedido
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const pedidos = carregarPedidos();
+      const novo = {
+        nome: form.nome.value.trim(),
+        telefone: form.telefone.value.trim(),
+        enderecoColeta: form.coleta.value.trim(),
+        enderecoEntrega: form.entrega.value.trim(),
+        status: 'Aguardando motoboy',
+        distancia_km: null,
+        taxa: null
+      };
+      pedidos.push(novo);
+      salvarPedidos(pedidos);
+      form.reset();
+      mostrarPedidos();
+      alert('Pedido enviado com sucesso!');
+    });
+
+    // Exibe a lista de pedidos para o cliente
     function mostrarPedidos() {
-      const pedidos = JSON.parse(localStorage.getItem('pedidos') || '[]');
-      const lista = document.getElementById('listaPedidos');
+      const pedidos = carregarPedidos();
       lista.innerHTML = '';
+      if (pedidos.length === 0) {
+        lista.innerHTML = '<p>Você ainda não fez nenhum pedido.</p>';
+        return;
+      }
       pedidos.forEach((p, i) => {
         const div = document.createElement('div');
         div.className = 'pedido';
-        div.innerHTML = `
+        let html = `
           <strong>Pedido #${i + 1}</strong><br/>
-          Nome: ${p.nome} <br/>
-          Telefone: ${p.telefone} <br/>
-          Coleta: ${p.enderecoColeta} <br/>
-          Entrega: ${p.enderecoEntrega}
+          Status: <strong>${p.status}</strong><br/>
         `;
+        if (p.distancia_km != null && p.taxa != null) {
+          html += `
+            <div class="mensagem">
+              Sua corrida ficará R$${Number(p.taxa).toFixed(2)} devido à distância de ${p.distancia_km} km informada pelo sistema.
+            </div>
+          `;
+        }
+        div.innerHTML = html;
         lista.appendChild(div);
       });
     }
 
-    document.getElementById('formPedido').addEventListener('submit', e => {
-      e.preventDefault();
-      const pedido = {
-        nome: document.getElementById('nome').value,
-        telefone: document.getElementById('telefone').value,
-        enderecoColeta: document.getElementById('enderecoColeta').value,
-        enderecoEntrega: document.getElementById('enderecoEntrega').value,
-        status: 'pendente'
-      };
-      salvarPedido(pedido);
-      mostrarPedidos();
-      e.target.reset();
-      alert('Pedido enviado!');
-    });
-
+    // Carrega ao iniciar
     mostrarPedidos();
   </script>
 
 </body>
 </html>
+
