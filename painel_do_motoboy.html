@@ -8,6 +8,17 @@
     .pedido { border: 1px solid #ccc; padding: 10px; margin-bottom: 15px; }
     button { margin-top: 10px; padding: 6px 12px; }
     select { margin-top: 8px; }
+    a.maps-link {
+      display: inline-block;
+      margin-top: 6px;
+      margin-right: 10px;
+      color: #3498db;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    a.maps-link:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
@@ -35,6 +46,12 @@
       mostrarPedidos();
     }
 
+    // Cria link para o Google Maps com endereço codificado
+    function criarLinkMapa(endereco, texto) {
+      const url = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(endereco);
+      return `<a href="${url}" target="_blank" class="maps-link">${texto}</a>`;
+    }
+
     // Mostra a lista de pedidos com controles para o motoboy
     function mostrarPedidos() {
       const pedidos = carregarPedidos();
@@ -49,12 +66,18 @@
       pedidos.forEach((p, i) => {
         const div = document.createElement('div');
         div.className = 'pedido';
+
+        const linkColeta = criarLinkMapa(p.enderecoColeta, 'Ver Coleta no Maps');
+        const linkEntrega = criarLinkMapa(p.enderecoEntrega, 'Ver Entrega no Maps');
+
         div.innerHTML = `
           <strong>Pedido #${i + 1}</strong><br/>
           Nome: ${p.nome} <br/>
           Telefone: ${p.telefone} <br/>
           Coleta: ${p.enderecoColeta} <br/>
+          ${linkColeta} <br/>
           Entrega: ${p.enderecoEntrega} <br/>
+          ${linkEntrega} <br/>
           Status: <strong>${p.status}</strong><br/>
           <label>Atualizar status:
             <select onchange="atualizarStatus(${i}, this.value)">
