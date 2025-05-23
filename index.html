@@ -2,157 +2,83 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <title>Solicitar e Consultar Entrega</title>
-  <link rel="stylesheet" href="style.css">
+  <title>Solicitar Entrega - Sistema Simples</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    h1, h2 {
-      color: #333;
-      text-align: center;
-      width: 100%;
-      max-width: 600px;
-    }
-    form, #listaPedidos {
-      width: 100%;
-      max-width: 600px;
-    }
-    form label {
-      display: block;
-      margin-top: 10px;
-    }
-    form input, form select, form textarea, form button {
-      width: 100%;
-      padding: 8px;
-      margin-top: 5px;
-      box-sizing: border-box;
-    }
-    form button {
-      margin-top: 15px;
-      background-color: #3498db;
-      color: white;
-      border: none;
-      font-size: 16px;
-      cursor: pointer;
-    }
-    form button:hover {
-      background-color: #2980b9;
-    }
-    .pedido {
-      border: 1px solid #ccc;
-      padding: 10px;
-      margin-bottom: 15px;
-      width: 100%;
-      box-sizing: border-box;
-    }
-    .mensagem {
-      margin-top: 8px;
-      font-weight: bold;
-      color: #27ae60;
-    }
+    body { font-family: Arial, sans-serif; margin: 20px; max-width: 600px; }
+    label { display: block; margin-top: 15px; }
+    input, textarea { width: 100%; padding: 8px; margin-top: 5px; }
+    button { margin-top: 15px; padding: 10px 20px; }
+    .pedido { border: 1px solid #ddd; padding: 10px; margin-top: 15px; }
   </style>
 </head>
 <body>
 
   <h1>Solicitar Entrega</h1>
+
   <form id="formPedido">
-    <label for="nome">Nome do Cliente:</label>
-    <input type="text" id="nome" name="nome" required />
+    <label>Nome do Cliente:
+      <input type="text" id="nome" required />
+    </label>
 
-    <label for="tipo">Tipo de Local:</label>
-    <select id="tipo" name="tipo" required>
-      <option value="">Selecione...</option>
-      <option value="Casa">Casa</option>
-      <option value="Empresa">Empresa</option>
-    </select>
+    <label>Telefone:
+      <input type="tel" id="telefone" required />
+    </label>
 
-    <label for="telefone">Telefone:</label>
-    <input type="tel" id="telefone" name="telefone" required />
+    <label>Endereço de Coleta:
+      <textarea id="enderecoColeta" rows="2" required></textarea>
+    </label>
 
-    <label for="coleta">Endereço de Coleta:</label>
-    <textarea id="coleta" name="coleta" rows="2" required></textarea>
-
-    <label for="entrega">Endereço de Entrega:</label>
-    <textarea id="entrega" name="entrega" rows="2" required></textarea>
+    <label>Endereço de Entrega:
+      <textarea id="enderecoEntrega" rows="2" required></textarea>
+    </label>
 
     <button type="submit">Enviar Pedido</button>
   </form>
 
-  <h2>Meus Pedidos</h2>
+  <h2>Pedidos enviados</h2>
   <div id="listaPedidos"></div>
 
   <script>
-    const form = document.getElementById('formPedido');
-    const lista = document.getElementById('listaPedidos');
-
-    function carregarPedidos() {
-      return JSON.parse(localStorage.getItem('pedidos') || '[]');
-    }
-
-    function salvarPedidos(pedidos) {
+    // Função para salvar pedido no localStorage
+    function salvarPedido(pedido) {
+      const pedidos = JSON.parse(localStorage.getItem('pedidos') || '[]');
+      pedidos.push(pedido);
       localStorage.setItem('pedidos', JSON.stringify(pedidos));
     }
 
-    form.addEventListener('submit', e => {
-      e.preventDefault();
-      const nome = form.nome.value.trim();
-      const tipo = form.tipo.value;
-      const telefone = form.telefone.value.trim();
-      const enderecoColeta = form.coleta.value.trim();
-      const enderecoEntrega = form.entrega.value.trim();
-      if (!tipo) {
-        alert('Por favor, selecione o tipo de local (Casa ou Empresa).');
-        return;
-      }
-      const pedidos = carregarPedidos();
-      const novo = {
-        nome,
-        tipo,
-        telefone,
-        enderecoColeta,
-        enderecoEntrega,
-        status: 'Aguardando motoboy',
-        distancia_km: null,
-        taxa: null
-      };
-      pedidos.push(novo);
-      salvarPedidos(pedidos);
-      form.reset();
-      mostrarPedidos();
-      alert('Pedido enviado com sucesso!');
-    });
-
+    // Função para carregar e mostrar pedidos
     function mostrarPedidos() {
-      const pedidos = carregarPedidos();
+      const pedidos = JSON.parse(localStorage.getItem('pedidos') || '[]');
+      const lista = document.getElementById('listaPedidos');
       lista.innerHTML = '';
-      if (pedidos.length === 0) {
-        lista.innerHTML = '<p>Você ainda não fez nenhum pedido.</p>';
-        return;
-      }
       pedidos.forEach((p, i) => {
         const div = document.createElement('div');
         div.className = 'pedido';
-        let html = `
+        div.innerHTML = `
           <strong>Pedido #${i + 1}</strong><br/>
-          Cliente: ${p.nome} (${p.tipo}) - Tel: ${p.telefone}<br/>
-          Status: <strong>${p.status}</strong><br/>
+          Nome: ${p.nome} <br/>
+          Telefone: ${p.telefone} <br/>
+          Coleta: ${p.enderecoColeta} <br/>
+          Entrega: ${p.enderecoEntrega}
         `;
-        if (p.distancia_km != null && p.taxa != null) {
-          html += `
-            <div class="mensagem">
-              Sua corrida ficará R$${Number(p.taxa).toFixed(2)} devido à distância de ${p.distancia_km} km informada pelo sistema.
-            </div>
-          `;
-        }
-        div.innerHTML = html;
         lista.appendChild(div);
       });
     }
+
+    document.getElementById('formPedido').addEventListener('submit', e => {
+      e.preventDefault();
+      const pedido = {
+        nome: document.getElementById('nome').value,
+        telefone: document.getElementById('telefone').value,
+        enderecoColeta: document.getElementById('enderecoColeta').value,
+        enderecoEntrega: document.getElementById('enderecoEntrega').value,
+        status: 'pendente'
+      };
+      salvarPedido(pedido);
+      mostrarPedidos();
+      e.target.reset();
+      alert('Pedido enviado!');
+    });
 
     mostrarPedidos();
   </script>
