@@ -3,44 +3,33 @@
 <head>
   <meta charset="UTF-8" />
   <title>Painel do Administrador</title>
+  <link rel="stylesheet" href="style.css">
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; max-width: 700px; }
-    .pedido { border: 1px solid #ccc; padding: 10px; margin-bottom: 15px; position: relative; }
-    button { position: absolute; top: 10px; right: 10px; padding: 5px 10px; background: #e74c3c; color: white; border: none; cursor: pointer; }
-    button:hover { background: #c0392b; }
+    body { font-family: Arial, sans-serif; margin: 20px; display: flex; flex-direction: column; align-items: center; }
+    h1 { color: #333; text-align: center; }
+    #listaPedidosAdmin { width: 100%; max-width: 700px; }
+    .pedido { border: 1px solid #ccc; padding: 10px; margin-bottom: 15px; box-sizing: border-box; }
   </style>
 </head>
 <body>
 
   <h1>Painel do Administrador</h1>
-
-  <div id="listaPedidos"></div>
+  <div id="listaPedidosAdmin"></div>
 
   <script>
+    // Carrega pedidos do localStorage
     function carregarPedidos() {
       return JSON.parse(localStorage.getItem('pedidos') || '[]');
     }
 
-    function salvarPedidos(pedidos) {
-      localStorage.setItem('pedidos', JSON.stringify(pedidos));
-    }
-
-    function excluirPedido(index) {
-      if(confirm('Deseja realmente excluir este pedido?')) {
-        const pedidos = carregarPedidos();
-        pedidos.splice(index, 1);
-        salvarPedidos(pedidos);
-        mostrarPedidos();
-      }
-    }
-
-    function mostrarPedidos() {
+    // Exibe os pedidos com todos os detalhes
+    function mostrarPedidosAdmin() {
       const pedidos = carregarPedidos();
-      const lista = document.getElementById('listaPedidos');
+      const lista = document.getElementById('listaPedidosAdmin');
       lista.innerHTML = '';
 
-      if(pedidos.length === 0) {
-        lista.innerHTML = '<p>Nenhum pedido cadastrado.</p>';
+      if (pedidos.length === 0) {
+        lista.innerHTML = '<p>Não há pedidos no sistema.</p>';
         return;
       }
 
@@ -49,18 +38,20 @@
         div.className = 'pedido';
         div.innerHTML = `
           <strong>Pedido #${i + 1}</strong><br/>
-          Nome: ${p.nome} <br/>
-          Telefone: ${p.telefone} <br/>
-          Coleta: ${p.enderecoColeta} <br/>
-          Entrega: ${p.enderecoEntrega} <br/>
-          Status: <strong>${p.status}</strong>
-          <button onclick="excluirPedido(${i})">Excluir</button>
+          Cliente: ${p.nome} - Tel: ${p.telefone}<br/>
+          Coleta: ${p.enderecoColeta} - Entrega: ${p.enderecoEntrega}<br/>
+          Status: <strong>${p.status}</strong><br/>
+          Distância: ${p.distancia_km ? p.distancia_km + ' km' : '---'}<br/>
+          Taxa: ${p.taxa ? 'R$ ' + p.taxa : '---'}<br/>
+          Motoboy: ${p.motoboyNome || '---'} - Tel: ${p.motoboyTelefone || '---'}<br/>
+          Horário coleta: ${p.hora_coleta || '---'}<br/>
+          Horário entrega: ${p.hora_entrega || '---'}
         `;
         lista.appendChild(div);
       });
     }
 
-    mostrarPedidos();
+    mostrarPedidosAdmin();
   </script>
 
 </body>
