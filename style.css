@@ -1,79 +1,149 @@
-/* Estilos gerais para centralização de containers */
-body {
-  font-family: Arial, sans-serif;
-  margin: 0;
-  padding: 20px;
-  background: #f5f5f5;
-}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Painel do Motoboy</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
 
-.container {
-  width: 100%;
-  max-width: 700px;
-  margin: 0 auto 20px auto; /* centraliza horizontalmente */
-  background: #fff;
-  padding: 20px;
-  box-sizing: border-box;
-  border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
+  <div class="container">
+    <h1>Painel do Motoboy</h1>
 
-h1, h2, h3 {
-  color: #333;
-  text-align: center;
-  margin-top: 0;
-}
+    <div id="dadosMotoboy">
+      <h3>Seus dados</h3>
+      <label for="nomeMotoboy">Nome:</label>
+      <input type="text" id="nomeMotoboy" placeholder="Digite seu nome" />
+      <label for="telefoneMotoboy">Telefone:</label>
+      <input type="tel" id="telefoneMotoboy" placeholder="Digite seu telefone" />
+      <button id="salvarDadosBtn">Salvar Dados</button>
+      <button id="logoutBtn" style="display:none;">Sair</button>
+    </div>
 
-input[type="text"],
-input[type="tel"],
-input[type="number"],
-select,
-textarea {
-  margin-top: 5px;
-  padding: 8px;
-  width: 100%;
-  box-sizing: border-box;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
+    <div id="listaPedidosContainer">
+      <div id="listaPedidos"></div>
+    </div>
+  </div>
 
-button {
-  margin-top: 10px;
-  padding: 8px 14px;
-  cursor: pointer;
-  border: none;
-  border-radius: 4px;
-  background: #3498db;
-  color: #fff;
-  font-size: 14px;
-}
+  <script>
+    // Funções motoboy
+    function salvarDadosMotoboy() {
+      const nome = document.getElementById('nomeMotoboy').value.trim();
+      const telefone = document.getElementById('telefoneMotoboy').value.trim();
+      if (!nome || !telefone) { alert('Preencha nome e telefone.'); return; }
+      localStorage.setItem('motoboyNome', nome);
+      localStorage.setItem('motoboyTelefone', telefone);
+      atualizarInterface(); mostrarPedidos();
+    }
+    function limparDadosMotoboy() {
+      localStorage.removeItem('motoboyNome'); localStorage.removeItem('motoboyTelefone');
+      atualizarInterface(); document.getElementById('listaPedidos').innerHTML = '';
+    }
+    function atualizarInterface() {
+      const nome = localStorage.getItem('motoboyNome');
+      const tel = localStorage.getItem('motoboyTelefone');
+      if (nome && tel) {
+        document.getElementById('nomeMotoboy').value = nome;
+        document.getElementById('telefoneMotoboy').value = tel;
+        document.getElementById('nomeMotoboy').disabled = true;
+        document.getElementById('telefoneMotoboy').disabled = true;
+        document.getElementById('salvarDadosBtn').style.display = 'none';
+        document.getElementById('logoutBtn').style.display = 'inline-block';
+      } else {
+        document.getElementById('nomeMotoboy').disabled = false;
+        document.getElementById('telefoneMotoboy').disabled = false;
+        document.getElementById('salvarDadosBtn').style.display = 'inline-block';
+        document.getElementById('logoutBtn').style.display = 'none';
+      }
+    }
 
-button:hover {
-  background: #2980b9;
-}
+    // Pedidos
+    function carregarPedidos() { return JSON.parse(localStorage.getItem('pedidos') || '[]'); }
+    function salvarPedidos(p) { localStorage.setItem('pedidos', JSON.stringify(p)); }
+    function calcularTaxa(km) { km = Number(km); if (isNaN(km) || km <= 0) return 0; if (km <= 5) return 10; return 10 + (km - 5) * 2; }
 
-a.maps-link {
-  display: inline-block;
-  margin-top: 6px;
-  margin-right: 10px;
-  color: #3498db;
-  text-decoration: none;
-  font-weight: bold;
-}
+    // Mostrar lista
+    function mostrarPedidos() {
+      const pedidos = carregarPedidos();
+      if (!localStorage.getItem('motoboyNome')) return;
+      const meuNome = localStorage.getItem('motoboyNome');
+      const meuTel = localStorage.getItem('motoboyTelefone');
+      const lista = document.getElementById('listaPedidos');
+      lista.innerHTML = '';
 
-a.maps-link:hover {
-  text-decoration: underline;
-}
+      pedidos.forEach((p, i) => {
+        const div = document.createElement('div');
+        div.className = 'pedido';
 
-.pedido {
-  border: 1px solid #ccc;
-  padding: 15px;
-  margin-bottom: 15px;
-  border-radius: 6px;
-  background: #fafafa;
-}
+        if (!p.motoboyNome && p.status === 'Aguardando motoboy') {
+          div.innerHTML = `
+            <strong>Pedido #${i + 1}</strong><br/>
+            Coleta: ${p.enderecoColeta}<br/>
+            Entrega: ${p.enderecoEntrega}<br/>
+            <button onclick='aceitar(${i})'>Aceitar Entrega</button>
+          `;
+        }
+        else if (p.motoboyNome === meuNome && p.motoboyTelefone === meuTel) {
+          const taxaTxt = p.taxa ? `R$ ${p.taxa}` : 'Não calculada';
+          const kmVal = p.distancia_km || '';
+          div.innerHTML = `
+            <strong>Pedido #${i + 1}</strong><br/>
+            Status: <strong>${p.status}</strong><br/>
+            ${p.hora_coleta ? `<div class="timestamp">Coleta: ${p.hora_coleta}</div><br/>` : ''}
+            ${p.hora_entrega ? `<div class="timestamp">Entrega: ${p.hora_entrega}</div><br/>` : ''}
+            Distância (km): <input type="number" id="km_${i}" value="${kmVal}" step="0.1" /><br/>
+            Taxa: <strong id="taxa_${i}">${taxaTxt}</strong><br/>
+            Atualizar para: <select id="status_${i}">
+              <option value="pendente">Pendente</option>
+              <option value="a caminho">A caminho da coleta</option>
+              <option value="entregue">Entregue</option>
+            </select><br/>
+            <button onclick='salvarAtualizacao(${i})'>Salvar</button><br/>
+            <a href="https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(p.enderecoColeta)}&destination=${encodeURIComponent(p.enderecoEntrega)}" target="_blank" class="maps-link">Ver Rota</a>
+          `;
+        }
+        else {
+          div.innerHTML = `<strong>Pedido #${i + 1}</strong><br/>Status: ${p.status}`;
+        }
 
-.timestamp {
-  font-size: 0.9em;
-  color: #555;
-  margin-bottom: 5px;
-}
+        lista.appendChild(div);
+
+        if (p.motoboyNome === meuNome) {
+          document.getElementById(`km_${i}`).addEventListener('input', e => {
+            const val = calcularTaxa(e.target.value).toFixed(2);
+            document.getElementById(`taxa_${i}`).textContent = `R$ ${val}`;
+          });
+        }
+      });
+    }
+
+    // Ações
+    function aceitar(i) {
+      const pedidos = carregarPedidos();
+      pedidos[i].motoboyNome = localStorage.getItem('motoboyNome');
+      pedidos[i].motoboyTelefone = localStorage.getItem('motoboyTelefone');
+      pedidos[i].status = 'A caminho da coleta';
+      pedidos[i].hora_coleta = new Date().toLocaleString();
+      salvarPedidos(pedidos); mostrarPedidos();
+    }
+    function salvarAtualizacao(i) {
+      const pedidos = carregarPedidos();
+      const km = Number(document.getElementById(`km_${i}`).value);
+      if (isNaN(km) || km <= 0) { alert('Informe km válido.'); return; }
+      const status = document.getElementById(`status_${i}`).value;
+      pedidos[i].distancia_km = km;
+      pedidos[i].taxa = calcularTaxa(km).toFixed(2);
+      if (status === 'entregue') pedidos[i].hora_entrega = new Date().toLocaleString();
+      pedidos[i].status = status;
+      salvarPedidos(pedidos); mostrarPedidos(); alert(`Atualizado: R$ ${pedidos[i].taxa}`);
+    }
+
+    // Eventos
+    document.getElementById('salvarDadosBtn').addEventListener('click', salvarDadosMotoboy);
+    document.getElementById('logoutBtn').addEventListener('click', () => { if (confirm('Sair?')) limparDadosMotoboy(); });
+
+    atualizarInterface(); mostrarPedidos();
+  </script>
+
+</body>
+</html>
