@@ -5,9 +5,58 @@
   <title>Solicitar e Consultar Entrega</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    /* Se quiser usar só style.css, pode remover este bloco */
-    h1, h2 { text-align: center; color: #333; }
-    .mensagem { margin-top: 8px; font-weight: bold; color: #27ae60; }
+    /* Centraliza todo o conteúdo */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h1, h2 {
+      color: #333;
+      text-align: center;
+      width: 100%;
+      max-width: 600px;
+    }
+    /* Ajusta formulário e lista de pedidos */
+    form, #listaPedidos {
+      width: 100%;
+      max-width: 600px;
+    }
+    form label {
+      display: block;
+      margin-top: 10px;
+    }
+    form input, form textarea, form button {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      box-sizing: border-box;
+    }
+    form button {
+      margin-top: 15px;
+      background-color: #3498db;
+      color: white;
+      border: none;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    form button:hover {
+      background-color: #2980b9;
+    }
+    .pedido {
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-bottom: 15px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .mensagem {
+      margin-top: 8px;
+      font-weight: bold;
+      color: #27ae60;
+    }
   </style>
 </head>
 <body>
@@ -20,13 +69,13 @@
     <label for="telefone">Telefone:</label>
     <input type="tel" id="telefone" name="telefone" required />
 
-    <label for="coleta">Endereço de Coleta:</label>
+    <label for="coleta">Endereço de Coleta seu Endereço:</label>
     <textarea id="coleta" name="coleta" rows="2" required></textarea>
 
-    <label for="entrega">Endereço de Entrega:</label>
+    <label for="entrega">Endereço de Entrega do seu cliente:</label>
     <textarea id="entrega" name="entrega" rows="2" required></textarea>
 
-    <button type="submit">Enviar Pedido</button>
+    <button type="submit">Enviar  Pedido</button>
   </form>
 
   <h2>Meus Pedidos</h2>
@@ -97,4 +146,3 @@
 
 </body>
 </html>
-
