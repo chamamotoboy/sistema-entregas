@@ -1,167 +1,126 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Painel do Motoboy</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f5f5f5;
+      background-color: #f2f2f2;
       margin: 0;
-      padding: 20px;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
     }
+
     .container {
-      max-width: 700px;
-      margin: 0 auto;
-      background: #fff;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      width: 90%;
+      max-width: 800px;
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
-    h1, h3 {
+
+    h1 {
       text-align: center;
-      color: #333;
-      margin-top: 0;
+      margin-bottom: 20px;
     }
-    #dadosMotoboy label {
-      display: block;
-      margin-top: 10px;
-      font-weight: bold;
-    }
-    #dadosMotoboy input {
-      width: 100%;
-      padding: 8px;
-      margin-top: 5px;
-      box-sizing: border-box;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-    button {
-      margin-top: 10px;
-      padding: 8px 14px;
-      cursor: pointer;
-      border: none;
-      border-radius: 4px;
-      background: #3498db;
-      color: #fff;
-      font-size: 14px;
-      display: inline-block;
-    }
-    button#logoutBtn {
-      background: #c00;
-      margin-left: 10px;
-    }
+
     .pedido {
       border: 1px solid #ccc;
+      border-radius: 8px;
       padding: 15px;
       margin-bottom: 15px;
-      border-radius: 6px;
-      background: #fafafa;
+      background-color: #f9f9f9;
     }
-    .pedido input,
-    .pedido select {
-      width: calc(100% - 4px);
-      padding: 8px;
-      margin-top: 5px;
-      box-sizing: border-box;
-      border: 1px solid #ccc;
-      border-radius: 4px;
+
+    .pedido p {
+      margin: 5px 0;
     }
-    a.maps-link {
-      display: inline-block;
-      margin-top: 6px;
-      color: #3498db;
-      text-decoration: none;
+
+    button {
+      margin-right: 10px;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 5px;
+      background-color: #007bff;
+      color: #fff;
+      cursor: pointer;
+    }
+
+    button.entregue {
+      background-color: #28a745;
+    }
+
+    .status {
       font-weight: bold;
-    }
-    a.maps-link:hover {
-      text-decoration: underline;
-    }
-    .timestamp {
-      font-size: 0.9em;
       color: #555;
-      margin-bottom: 5px;
     }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Painel do Motoboy</h1>
-    <div id="dadosMotoboy">
-      <h3>Seus dados</h3>
-      <label for="nomeMotoboy">Nome:</label>
-      <input type="text" id="nomeMotoboy" placeholder="Digite seu nome" />
-      <label for="telefoneMotoboy">Telefone:</label>
-      <input type="tel" id="telefoneMotoboy" placeholder="Digite seu telefone" />
-      <button id="salvarDadosBtn">Salvar Dados</button>
-      <button id="logoutBtn" style="display:none;">Sair</button>
-    </div>
-    <div id="listaPedidos"></div>
+    <div id="lista-pedidos"></div>
   </div>
+
   <script>
-    function salvarDadosMotoboy() {
-      const nome = document.getElementById('nomeMotoboy').value.trim();
-      const telefone = document.getElementById('telefoneMotoboy').value.trim();
-      if (!nome || !telefone) { alert('Preencha nome e telefone.'); return; }
-      localStorage.setItem('motoboyNome', nome);
-      localStorage.setItem('motoboyTelefone', telefone);
-      atualizarInterface(); mostrarPedidos();
-    }
-    function limparDadosMotoboy() {
-      localStorage.removeItem('motoboyNome'); localStorage.removeItem('motoboyTelefone');
-      atualizarInterface(); document.getElementById('listaPedidos').innerHTML = '';
-    }
-    function atualizarInterface() {
-      const nome = localStorage.getItem('motoboyNome');
-      const tel = localStorage.getItem('motoboyTelefone');
-      if (nome && tel) {
-        document.getElementById('nomeMotoboy').value = nome;
-        document.getElementById('telefoneMotoboy').value = tel;
-        document.getElementById('nomeMotoboy').disabled = true;
-        document.getElementById('telefoneMotoboy').disabled = true;
-        document.getElementById('salvarDadosBtn').style.display = 'none';
-        document.getElementById('logoutBtn').style.display = 'inline-block';
-      } else {
-        document.getElementById('nomeMotoboy').disabled = false;
-        document.getElementById('telefoneMotoboy').disabled = false;
-        document.getElementById('salvarDadosBtn').style.display = 'inline-block';
-        document.getElementById('logoutBtn').style.display = 'none';
+    // Simula pedidos carregados do JSON
+    const pedidos = [
+      {
+        id: "EXPRESS 0001",
+        nome: "João da Silva",
+        telefone: "45999999999",
+        endereco_coleta: "Rua A, 100",
+        endereco_entrega: "Rua B, 200",
+        status: "Pendente"
+      },
+      {
+        id: "EXPRESS 0002",
+        nome: "Maria Souza",
+        telefone: "45988888888",
+        endereco_coleta: "Rua C, 300",
+        endereco_entrega: "Rua D, 400",
+        status: "Pendente"
       }
-    }
-    function carregarPedidos() { return JSON.parse(localStorage.getItem('pedidos') || '[]'); }
-    function salvarPedidos(p) { localStorage.setItem('pedidos', JSON.stringify(p)); }
-    function calcularTaxa(km) { km = Number(km); if (isNaN(km) || km <= 0) return 0; if (km <= 5) return 10; return 10 + (km - 5) * 2; }
-    function mostrarPedidos() {
-      const pedidos = carregarPedidos();
-      if (!localStorage.getItem('motoboyNome')) return;
-      const meuNome = localStorage.getItem('motoboyNome');
-      const meuTel = localStorage.getItem('motoboyTelefone');
-      const lista = document.getElementById('listaPedidos'); lista.innerHTML = '';
-      pedidos.forEach((p, i) => {
-        const div = document.createElement('div'); div.className = 'pedido';
-        if (!p.motoboyNome && p.status === 'Aguardando motoboy') {
-          div.innerHTML = `<strong>Pedido #${i+1}</strong><br/>Coleta: ${p.enderecoColeta}<br/>Entrega: ${p.enderecoEntrega}<br/><button onclick='aceitar(${i})'>Aceitar Entrega</button>`;
-        } else if (p.motoboyNome === meuNome && p.motoboyTelefone === meuTel) {
-          const taxaTxt = p.taxa ? `R$ ${p.taxa}` : 'Não calculada';
-          const kmVal = p.distancia_km || '';
-          div.innerHTML = `<strong>Pedido #${i+1}</strong><br/>Status: <strong>${p.status}</strong><br/>${p.hora_coleta ? `<div class="timestamp">Coleta: ${p.hora_coleta}</div><br/>` : ''}${p.hora_entrega ? `<div class="timestamp">Entrega: ${p.hora_entrega}</div><br/>` : ''}Distância (km): <input type="number" id="km_${i}" value="${kmVal}" step="0.1" /><br/>Taxa: <strong id="taxa_${i}">${taxaTxt}</strong><br/>Atualizar para: <select id="status_${i}"><option value="pendente">Pendente</option><option value="a caminho">A caminho da coleta</option><option value="entregue">Entregue</option></select><br/><button onclick='salvarAtualizacao(${i})'>Salvar</button><br/><a href="https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(p.enderecoColeta)}&destination=${encodeURIComponent(p.enderecoEntrega)}" target="_blank" class="maps-link">Ver Rota</a>`;
-        } else {
-          div.innerHTML = `<strong>Pedido #${i+1}</strong><br/>Status: ${p.status}`;
-        }
+    ];
+
+    function atualizarLista() {
+      const lista = document.getElementById("lista-pedidos");
+      lista.innerHTML = "";
+
+      pedidos.forEach((pedido, index) => {
+        const div = document.createElement("div");
+        div.className = "pedido";
+
+        div.innerHTML = `
+          <p><strong>ID:</strong> ${pedido.id}</p>
+          <p><strong>Cliente:</strong> ${pedido.nome}</p>
+          <p><strong>Telefone:</strong> <a href="https://wa.me/55${pedido.telefone}" target="_blank">${pedido.telefone}</a></p>
+          <p><strong>Coleta:</strong> ${pedido.endereco_coleta}</p>
+          <p><strong>Entrega:</strong> ${pedido.endereco_entrega}</p>
+          <p><strong>Status:</strong> <span class="status">${pedido.status}</span></p>
+          <p><a href="https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(pedido.endereco_coleta)}&destination=${encodeURIComponent(pedido.endereco_entrega)}" target="_blank">
+            Iniciar rota no Google Maps
+          </a></p>
+          <button onclick="mudarStatus(${index}, 'A caminho')">A caminho</button>
+          <button class="entregue" onclick="mudarStatus(${index}, 'Entregue')">Entregue</button>
+        `;
+
         lista.appendChild(div);
-        if (p.motoboyNome === meuNome) {
-          document.getElementById(`km_${i}`).addEventListener('input', e => {
-            const val = calcularTaxa(e.target.value).toFixed(2);
-            document.getElementById(`taxa_${i}`).textContent = `R$ ${val}`;
-          });
-        }
       });
     }
-    function aceitar(i) { const pedidos = carregarPedidos(); pedidos[i].motoboyNome = localStorage.getItem('motoboyNome'); pedidos[i].motoboyTelefone = localStorage.getItem('motoboyTelefone'); pedidos[i].status = 'A caminho da coleta'; pedidos[i].hora_coleta = new Date().toLocaleString(); salvarPedidos(pedidos); mostrarPedidos(); }
-    function salvarAtualizacao(i) { const pedidos = carregarPedidos(); const km = Number(document.getElementById(`km_${i}`).value); if (isNaN(km) || km <= 0) { alert('Informe km válido.'); return; } const status = document.getElementById(`status_${i}`).value; pedidos[i].distancia_km = km; pedidos[i].taxa = calcularTaxa(km).toFixed(2); if (status === 'entregue') pedidos[i].hora_entrega = new Date().toLocaleString(); pedidos[i].status = status; salvarPedidos(pedidos); mostrarPedidos(); alert(`Atualizado: R$ ${pedidos[i].taxa}`); }
-    document.getElementById('salvarDadosBtn').addEventListener('click', salvarDadosMotoboy);
-    document.getElementById('logoutBtn').addEventListener('click', () => { if (confirm('Sair?')) limparDadosMotoboy(); });
-    atualizarInterface(); mostrarPedidos();
+
+    function mudarStatus(index, novoStatus) {
+      pedidos[index].status = novoStatus;
+      atualizarLista();
+    }
+
+    // Inicializa
+    atualizarLista();
   </script>
 </body>
 </html>
