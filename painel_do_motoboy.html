@@ -1,126 +1,75 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Painel do Motoboy</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f2f2f2;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-    }
-
-    .container {
-      width: 90%;
-      max-width: 800px;
-      background-color: #fff;
-      padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-
-    h1 {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    .pedido {
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      padding: 15px;
-      margin-bottom: 15px;
-      background-color: #f9f9f9;
-    }
-
-    .pedido p {
-      margin: 5px 0;
-    }
-
-    button {
-      margin-right: 10px;
-      padding: 8px 12px;
-      border: none;
-      border-radius: 5px;
-      background-color: #007bff;
-      color: #fff;
-      cursor: pointer;
-    }
-
-    button.entregue {
-      background-color: #28a745;
-    }
-
-    .status {
-      font-weight: bold;
-      color: #555;
-    }
+    body { font-family: Arial, sans-serif; margin: 20px; max-width: 700px; }
+    .pedido { border: 1px solid #ccc; padding: 10px; margin-bottom: 15px; }
+    button { margin-top: 10px; padding: 6px 12px; }
+    select { margin-top: 8px; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Painel do Motoboy</h1>
-    <div id="lista-pedidos"></div>
-  </div>
+
+  <h1>Painel do Motoboy</h1>
+
+  <div id="listaPedidos"></div>
 
   <script>
-    // Simula pedidos carregados do JSON
-    const pedidos = [
-      {
-        id: "EXPRESS 0001",
-        nome: "João da Silva",
-        telefone: "45999999999",
-        endereco_coleta: "Rua A, 100",
-        endereco_entrega: "Rua B, 200",
-        status: "Pendente"
-      },
-      {
-        id: "EXPRESS 0002",
-        nome: "Maria Souza",
-        telefone: "45988888888",
-        endereco_coleta: "Rua C, 300",
-        endereco_entrega: "Rua D, 400",
-        status: "Pendente"
+    // Carrega pedidos do localStorage
+    function carregarPedidos() {
+      return JSON.parse(localStorage.getItem('pedidos') || '[]');
+    }
+
+    // Salva pedidos no localStorage
+    function salvarPedidos(pedidos) {
+      localStorage.setItem('pedidos', JSON.stringify(pedidos));
+    }
+
+    // Atualiza status do pedido
+    function atualizarStatus(index, novoStatus) {
+      const pedidos = carregarPedidos();
+      pedidos[index].status = novoStatus;
+      salvarPedidos(pedidos);
+      mostrarPedidos();
+    }
+
+    // Mostra a lista de pedidos com controles para o motoboy
+    function mostrarPedidos() {
+      const pedidos = carregarPedidos();
+      const lista = document.getElementById('listaPedidos');
+      lista.innerHTML = '';
+
+      if(pedidos.length === 0){
+        lista.innerHTML = '<p>Nenhum pedido encontrado.</p>';
+        return;
       }
-    ];
 
-    function atualizarLista() {
-      const lista = document.getElementById("lista-pedidos");
-      lista.innerHTML = "";
-
-      pedidos.forEach((pedido, index) => {
-        const div = document.createElement("div");
-        div.className = "pedido";
-
+      pedidos.forEach((p, i) => {
+        const div = document.createElement('div');
+        div.className = 'pedido';
         div.innerHTML = `
-          <p><strong>ID:</strong> ${pedido.id}</p>
-          <p><strong>Cliente:</strong> ${pedido.nome}</p>
-          <p><strong>Telefone:</strong> <a href="https://wa.me/55${pedido.telefone}" target="_blank">${pedido.telefone}</a></p>
-          <p><strong>Coleta:</strong> ${pedido.endereco_coleta}</p>
-          <p><strong>Entrega:</strong> ${pedido.endereco_entrega}</p>
-          <p><strong>Status:</strong> <span class="status">${pedido.status}</span></p>
-          <p><a href="https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(pedido.endereco_coleta)}&destination=${encodeURIComponent(pedido.endereco_entrega)}" target="_blank">
-            Iniciar rota no Google Maps
-          </a></p>
-          <button onclick="mudarStatus(${index}, 'A caminho')">A caminho</button>
-          <button class="entregue" onclick="mudarStatus(${index}, 'Entregue')">Entregue</button>
+          <strong>Pedido #${i + 1}</strong><br/>
+          Nome: ${p.nome} <br/>
+          Telefone: ${p.telefone} <br/>
+          Coleta: ${p.enderecoColeta} <br/>
+          Entrega: ${p.enderecoEntrega} <br/>
+          Status: <strong>${p.status}</strong><br/>
+          <label>Atualizar status:
+            <select onchange="atualizarStatus(${i}, this.value)">
+              <option value="pendente" ${p.status === 'pendente' ? 'selected' : ''}>Pendente</option>
+              <option value="a caminho" ${p.status === 'a caminho' ? 'selected' : ''}>A caminho da coleta</option>
+              <option value="entregue" ${p.status === 'entregue' ? 'selected' : ''}>Entregue</option>
+            </select>
+          </label>
         `;
-
         lista.appendChild(div);
       });
     }
 
-    function mudarStatus(index, novoStatus) {
-      pedidos[index].status = novoStatus;
-      atualizarLista();
-    }
-
-    // Inicializa
-    atualizarLista();
+    mostrarPedidos();
   </script>
+
 </body>
 </html>
