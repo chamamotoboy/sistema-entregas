@@ -6,28 +6,72 @@
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; max-width: 700px; }
     .pedido { border: 1px solid #ccc; padding: 10px; margin-bottom: 15px; }
-    button { margin-top: 10px; padding: 6px 12px; }
-    select { margin-top: 8px; }
-    a.maps-link {
-      display: inline-block;
-      margin-top: 6px;
-      margin-right: 10px;
-      color: #3498db;
-      text-decoration: none;
-      font-weight: bold;
-    }
-    a.maps-link:hover {
-      text-decoration: underline;
-    }
+    button { margin-top: 10px; padding: 6px 12px; cursor: pointer; }
+    select, input[type="number"], input[type="text"], input[type="tel"] { margin-top: 8px; padding: 5px; width: 100%; box-sizing: border-box; }
+    label { display: block; margin-top: 10px; }
+    #dadosMotoboy { margin-bottom: 20px; padding: 10px; border: 1px solid #666; background: #f9f9f9; }
+    #logoutBtn { margin-top: 10px; background: #c00; color: white; border: none; }
   </style>
 </head>
 <body>
 
   <h1>Painel do Motoboy</h1>
 
+  <div id="dadosMotoboy">
+    <h3>Seus dados</h3>
+    <label>Nome:<input type="text" id="nomeMotoboy" placeholder="Digite seu nome" /></label>
+    <label>Telefone:<input type="tel" id="telefoneMotoboy" placeholder="Digite seu telefone" /></label>
+    <button id="salvarDadosBtn">Salvar Dados</button>
+    <button id="logoutBtn" style="display:none;">Sair</button>
+  </div>
+
   <div id="listaPedidos"></div>
 
   <script>
+    // Função para salvar dados do motoboy no localStorage
+    function salvarDadosMotoboy() {
+      const nome = document.getElementById('nomeMotoboy').value.trim();
+      const telefone = document.getElementById('telefoneMotoboy').value.trim();
+      if(!nome || !telefone){
+        alert('Por favor, preencha nome e telefone antes de continuar.');
+        return false;
+      }
+      localStorage.setItem('motoboyNome', nome);
+      localStorage.setItem('motoboyTelefone', telefone);
+      atualizarInterface();
+      mostrarPedidos();
+      return true;
+    }
+
+    // Função para limpar dados do motoboy (logout)
+    function limparDadosMotoboy() {
+      localStorage.removeItem('motoboyNome');
+      localStorage.removeItem('motoboyTelefone');
+      atualizarInterface();
+      document.getElementById('listaPedidos').innerHTML = '';
+    }
+
+    // Atualiza a interface conforme o status do login do motoboy
+    function atualizarInterface() {
+      const nome = localStorage.getItem('motoboyNome');
+      const telefone = localStorage.getItem('motoboyTelefone');
+      if(nome && telefone){
+        document.getElementById('nomeMotoboy').value = nome;
+        document.getElementById('telefoneMotoboy').value = telefone;
+        document.getElementById('nomeMotoboy').disabled = true;
+        document.getElementById('telefoneMotoboy').disabled = true;
+        document.getElementById('salvarDadosBtn').style.display = 'none';
+        document.getElementById('logoutBtn').style.display = 'inline-block';
+      } else {
+        document.getElementById('nomeMotoboy').value = '';
+        document.getElementById('telefoneMotoboy').value = '';
+        document.getElementById('nomeMotoboy').disabled = false;
+        document.getElementById('telefoneMotoboy').disabled = false;
+        document.getElementById('salvarDadosBtn').style.display = 'inline-block';
+        document.getElementById('logoutBtn').style.display = 'none';
+      }
+    }
+
     // Carrega pedidos do localStorage
     function carregarPedidos() {
       return JSON.parse(localStorage.getItem('pedidos') || '[]');
@@ -38,21 +82,43 @@
       localStorage.setItem('pedidos', JSON.stringify(pedidos));
     }
 
-    // Atualiza status do pedido
-    function atualizarStatus(index, novoStatus) {
+    // Calcula taxa baseado na distância
+    function calcularTaxa(km) {
+      km = Number(km);
+      if(isNaN(km) || km <= 0) return 0;
+      if(km <= 5) return 10.00;
+      return 10 + (km - 5) * 2;
+    }
+
+    // Atualiza status, km e taxa do pedido
+    function atualizarPedido(index) {
       const pedidos = carregarPedidos();
-      pedidos[index].status = novoStatus;
+
+      const statusSelect = document.getElementById(`status_${index}`);
+      const kmInput = document.getElementById(`km_${index}`);
+
+      let km = kmInput.value.trim();
+      if(km === '' || isNaN(km) || Number(km) <= 0){
+        alert('Informe uma distância válida em km.');
+        return;
+      }
+      km = Number(km);
+      const taxa = calcularTaxa(km);
+
+      pedidos[index].status = statusSelect.value;
+      pedidos[index].distancia_km = km;
+      pedidos[index].taxa = taxa.toFixed(2);
+
+      // Salva dados do motoboy no pedido
+      pedidos[index].motoboyNome = localStorage.getItem('motoboyNome');
+      pedidos[index].motoboyTelefone = localStorage.getItem('motoboyTelefone');
+
       salvarPedidos(pedidos);
       mostrarPedidos();
+      alert(`Pedido atualizado! Taxa calculada: R$ ${taxa.toFixed(2)}`);
     }
 
-    // Cria link para o Google Maps com endereço codificado
-    function criarLinkMapa(endereco, texto) {
-      const url = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(endereco);
-      return `<a href="${url}" target="_blank" class="maps-link">${texto}</a>`;
-    }
-
-    // Mostra a lista de pedidos com controles para o motoboy
+    // Mostra a lista de pedidos
     function mostrarPedidos() {
       const pedidos = carregarPedidos();
       const lista = document.getElementById('listaPedidos');
@@ -64,34 +130,49 @@
       }
 
       pedidos.forEach((p, i) => {
+        const taxaExibicao = p.taxa ? `R$ ${p.taxa}` : 'Não calculada';
+        const kmExibicao = p.distancia_km ? `${p.distancia_km} km` : 'Não informado';
+
         const div = document.createElement('div');
         div.className = 'pedido';
-
-        const linkColeta = criarLinkMapa(p.enderecoColeta, 'Ver Coleta no Maps');
-        const linkEntrega = criarLinkMapa(p.enderecoEntrega, 'Ver Entrega no Maps');
 
         div.innerHTML = `
           <strong>Pedido #${i + 1}</strong><br/>
           Nome: ${p.nome} <br/>
           Telefone: ${p.telefone} <br/>
           Coleta: ${p.enderecoColeta} <br/>
-          ${linkColeta} <br/>
           Entrega: ${p.enderecoEntrega} <br/>
-          ${linkEntrega} <br/>
-          Status: <strong>${p.status}</strong><br/>
-          <label>Atualizar status:
-            <select onchange="atualizarStatus(${i}, this.value)">
-              <option value="pendente" ${p.status === 'pendente' ? 'selected' : ''}>Pendente</option>
-              <option value="a caminho" ${p.status === 'a caminho' ? 'selected' : ''}>A caminho da coleta</option>
-              <option value="entregue" ${p.status === 'entregue' ? 'selected' : ''}>Entregue</option>
-            </select>
-          </label>
+          Status atual: <strong>${p.status}</strong><br/>
+          Distância (km): <input type="number" min="0" step="0.1" id="km_${i}" value="${p.distancia_km || ''}" placeholder="Ex: 5.5" /><br/>
+          Taxa cobrada: <strong>${taxaExibicao}</strong><br/>
+          Atualizar status:
+          <select id="status_${i}">
+            <option value="pendente" ${p.status === 'pendente' ? 'selected' : ''}>Pendente</option>
+            <option value="a caminho" ${p.status === 'a caminho' ? 'selected' : ''}>A caminho da coleta</option>
+            <option value="entregue" ${p.status === 'entregue' ? 'selected' : ''}>Entregue</option>
+          </select><br/>
+          <button onclick="atualizarPedido(${i})">Salvar Atualização</button>
+          <br/><br/>
+          <a href="https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(p.enderecoColeta)}&destination=${encodeURIComponent(p.enderecoEntrega)}" target="_blank" rel="noopener noreferrer">Ver rota no Google Maps</a>
         `;
+
         lista.appendChild(div);
       });
     }
 
-    mostrarPedidos();
+    // Eventos
+    document.getElementById('salvarDadosBtn').addEventListener('click', salvarDadosMotoboy);
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      if(confirm('Deseja sair do sistema? Seus dados serão apagados.')){
+        limparDadosMotoboy();
+      }
+    });
+
+    // Inicia interface
+    atualizarInterface();
+    if(localStorage.getItem('motoboyNome') && localStorage.getItem('motoboyTelefone')){
+      mostrarPedidos();
+    }
   </script>
 
 </body>
