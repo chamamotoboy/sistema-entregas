@@ -3,180 +3,136 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Pedido de Entrega - Cliente</title>
+<title>Cliente - Fazer Pedido</title>
 <style>
   body {
     font-family: Arial, sans-serif;
-    background: #f0f4ff;
-    color: #004080;
+    background: #007BFF;
+    color: white;
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    min-height: 100vh;
     margin: 0;
-  }
-  .container {
-    background: white;
-    padding: 25px 30px;
-    border-radius: 10px;
-    box-shadow: 0 0 10px #a0b9ff;
-    width: 350px;
     text-align: center;
   }
-  h1 {
-    margin-bottom: 20px;
+  main {
+    background: white;
+    color: #007BFF;
+    padding: 25px;
+    border-radius: 10px;
+    width: 320px;
   }
+  h1 { margin-bottom: 15px; }
   label {
     display: block;
-    margin-top: 15px;
+    margin: 10px 0 5px;
     font-weight: bold;
   }
-  input[type="text"], input[type="tel"], input[type="number"] {
+  input, textarea {
     width: 100%;
     padding: 8px;
-    margin-top: 5px;
+    border: 1px solid #007BFF;
     border-radius: 5px;
-    border: 1.5px solid #004080;
-    font-size: 1rem;
+    font-size: 14px;
     box-sizing: border-box;
-    color: #004080;
-  }
-  .link-maps {
-    margin-top: 5px;
-    font-size: 0.9rem;
-  }
-  .link-maps a {
-    color: #004080;
-    text-decoration: underline;
-  }
-  .taxa {
-    margin-top: 15px;
-    font-weight: bold;
-    font-size: 1.1rem;
-    color: #002050;
   }
   button {
-    margin-top: 25px;
-    background: #004080;
+    margin-top: 15px;
+    width: 100%;
+    background: #007BFF;
     color: white;
     font-weight: bold;
-    font-size: 1.1rem;
-    border: none;
-    border-radius: 7px;
-    width: 100%;
     padding: 10px;
+    border: none;
+    border-radius: 5px;
     cursor: pointer;
-    transition: background 0.3s ease;
   }
   button:hover {
-    background: #002050;
+    background: #0056b3;
   }
-  .info {
-    font-size: 0.9rem;
-    margin-top: 12px;
-    color: #004080cc;
+  small {
+    display: block;
+    margin-top: 10px;
+    color: #333;
   }
 </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Olá, cliente! Faça seu pedido aqui</h1>
-    <form id="pedidoForm">
-      <label for="nomeCliente">Nome do cliente para coleta:</label>
-      <input type="text" id="nomeCliente" name="nomeCliente" placeholder="Seu nome completo" required />
+<main>
+  <h1>Olá, cliente!</h1>
+  <p>Esta página é para você fazer seu pedido de entrega. Preencha todos os dados corretamente.</p>
+  
+  <form id="pedidoForm">
+    <label for="nomeCliente">Nome do Cliente (quem entrega)</label>
+    <input type="text" id="nomeCliente" required />
 
-      <label for="telCliente">Telefone para entrega:</label>
-      <input type="tel" id="telCliente" name="telCliente" placeholder="(00) 90000-0000" pattern="[0-9\s()+-]{8,15}" required />
+    <label for="telefoneCliente">Telefone do Cliente (quem entrega)</label>
+    <input type="tel" id="telefoneCliente" required />
 
-      <label for="enderecoColeta">Endereço de coleta:</label>
-      <input type="text" id="enderecoColeta" name="enderecoColeta" placeholder="Rua, número, bairro, cidade" required />
-      <div class="link-maps" id="linkColeta"></div>
+    <label for="enderecoColeta">Endereço de Coleta</label>
+    <textarea id="enderecoColeta" rows="2" required></textarea>
 
-      <label for="enderecoEntrega">Endereço de entrega:</label>
-      <input type="text" id="enderecoEntrega" name="enderecoEntrega" placeholder="Rua, número, bairro, cidade" required />
-      <div class="link-maps" id="linkEntrega"></div>
+    <label for="telefoneColeta">Telefone da Coleta</label>
+    <input type="tel" id="telefoneColeta" required />
 
-      <label for="distanciaKm">Distância em km (aproximada):</label>
-      <input type="number" id="distanciaKm" name="distanciaKm" min="0" step="0.1" placeholder="Ex: 7.5" required />
+    <label for="enderecoEntrega">Endereço de Entrega</label>
+    <textarea id="enderecoEntrega" rows="2" required></textarea>
 
-      <div class="taxa" id="taxaEntrega">Taxa de entrega: R$ 0,00</div>
+    <label for="distanciaKm">Distância em km (para calcular a taxa)</label>
+    <input type="number" id="distanciaKm" min="1" max="50" required />
 
-      <button type="submit">Enviar Pedido</button>
-    </form>
-    <div class="info">
-      Após enviar, seu pedido será registrado e o administrador poderá contatar você pelo telefone.
-    </div>
-  </div>
+    <small>Taxa mínima: R$ 10,00 para até 5km. Acima de 5km: R$ 2,00 por km.</small>
+
+    <button type="submit">Enviar Pedido</button>
+  </form>
+
+  <p id="msgSucesso" style="color:green; display:none; margin-top:15px;">Pedido enviado com sucesso!</p>
+</main>
 
 <script>
-  const enderecoColeta = document.getElementById('enderecoColeta');
-  const enderecoEntrega = document.getElementById('enderecoEntrega');
-  const linkColeta = document.getElementById('linkColeta');
-  const linkEntrega = document.getElementById('linkEntrega');
-  const distanciaKm = document.getElementById('distanciaKm');
-  const taxaEntrega = document.getElementById('taxaEntrega');
-  const form = document.getElementById('pedidoForm');
-
-  function criarLinkGoogleMaps(endereco) {
-    if (!endereco.trim()) return '';
-    return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(endereco);
+  // Função para calcular a taxa baseado na distância
+  function calcularTaxa(distancia) {
+    if (distancia <= 5) return 10;
+    else return distancia * 2;
   }
 
-  function atualizarLinks() {
-    const urlColeta = criarLinkGoogleMaps(enderecoColeta.value);
-    const urlEntrega = criarLinkGoogleMaps(enderecoEntrega.value);
-
-    linkColeta.innerHTML = urlColeta ? `<a href="${urlColeta}" target="_blank" rel="noopener noreferrer">Ver no Google Maps</a>` : '';
-    linkEntrega.innerHTML = urlEntrega ? `<a href="${urlEntrega}" target="_blank" rel="noopener noreferrer">Ver no Google Maps</a>` : '';
-  }
-
-  function calcularTaxa(dist) {
-    dist = parseFloat(dist);
-    if (isNaN(dist) || dist < 0) return 0;
-    if (dist <= 5) return 10;
-    return 10 + (dist - 5) * 2;
-  }
-
-  function atualizarTaxa() {
-    const dist = distanciaKm.value;
-    const taxa = calcularTaxa(dist);
-    taxaEntrega.textContent = `Taxa de entrega: R$ ${taxa.toFixed(2)}`;
-  }
-
-  enderecoColeta.addEventListener('input', atualizarLinks);
-  enderecoEntrega.addEventListener('input', atualizarLinks);
-  distanciaKm.addEventListener('input', atualizarTaxa);
-
-  form.addEventListener('submit', e => {
+  document.getElementById('pedidoForm').addEventListener('submit', function(e) {
     e.preventDefault();
 
+    const nomeCliente = document.getElementById('nomeCliente').value.trim();
+    const telefoneCliente = document.getElementById('telefoneCliente').value.trim();
+    const enderecoColeta = document.getElementById('enderecoColeta').value.trim();
+    const telefoneColeta = document.getElementById('telefoneColeta').value.trim();
+    const enderecoEntrega = document.getElementById('enderecoEntrega').value.trim();
+    const distanciaKm = parseFloat(document.getElementById('distanciaKm').value);
+
+    const taxa = calcularTaxa(distanciaKm);
+
+    // Cria o pedido com ID (timestamp) e status 'pendente'
     const pedido = {
       id: Date.now(),
-      nomeCliente: form.nomeCliente.value.trim(),
-      telCliente: form.telCliente.value.trim(),
-      enderecoColeta: form.enderecoColeta.value.trim(),
-      enderecoEntrega: form.enderecoEntrega.value.trim(),
-      distanciaKm: parseFloat(form.distanciaKm.value),
-      taxaEntrega: calcularTaxa(form.distanciaKm.value),
+      nomeCliente,
+      telefoneCliente,
+      enderecoColeta,
+      telefoneColeta,
+      enderecoEntrega,
+      distanciaKm,
+      taxa,
       status: 'pendente',
-      dataPedido: new Date().toISOString()
+      motoboyNome: '',
+      motoboyWhatsApp: '',
+      dataHoraPedido: new Date().toLocaleString()
     };
 
-    // Pega pedidos atuais do localStorage
+    // Pega pedidos do localStorage ou cria array vazio
     let pedidos = JSON.parse(localStorage.getItem('pedidos')) || [];
     pedidos.push(pedido);
     localStorage.setItem('pedidos', JSON.stringify(pedidos));
 
-    alert('Pedido enviado com sucesso! O administrador verá os dados para contato.');
-
-    form.reset();
-    atualizarLinks();
-    atualizarTaxa();
+    this.reset();
+    document.getElementById('msgSucesso').style.display = 'block';
   });
-
-  // Inicializa links e taxa ao carregar a página
-  atualizarLinks();
-  atualizarTaxa();
 </script>
 </body>
 </html>
