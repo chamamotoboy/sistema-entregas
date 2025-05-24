@@ -11,6 +11,7 @@
     .pedido { border: 1px solid #ddd; padding: 10px; margin-top: 15px; }
     .info { background: #f0f0f0; padding: 10px; margin-bottom: 20px; }
     .maps-link { margin-top: 5px; display: inline-block; }
+    .resultado { font-weight: bold; margin-top: 10px; }
   </style>
 </head>
 <body>
@@ -38,6 +39,13 @@
       <textarea id="enderecoEntrega" rows="2" required></textarea>
     </label>
 
+    <label>Distância em km (para cálculo do preço):
+      <input type="number" id="km" min="1" max="50" placeholder="Ex: 12" required />
+    </label>
+
+    <button type="button" onclick="calcularPreco()">Calcular Preço</button>
+    <div class="resultado" id="resultado"></div>
+
     <button type="submit">Enviar Pedido</button>
   </form>
 
@@ -45,49 +53,19 @@
   <div id="listaPedidos"></div>
 
   <script>
-    function salvarPedido(pedido) {
-      const pedidos = JSON.parse(localStorage.getItem('pedidos') || '[]');
-      pedidos.push(pedido);
-      localStorage.setItem('pedidos', JSON.stringify(pedidos));
-    }
+    function calcularPreco() {
+      const km = parseInt(document.getElementById('km').value);
+      let preco = 0;
 
-    function mostrarPedidos() {
-      const pedidos = JSON.parse(localStorage.getItem('pedidos') || '[]');
-      const lista = document.getElementById('listaPedidos');
-      lista.innerHTML = '';
-      pedidos.forEach((p, i) => {
-        const linkRota = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(p.enderecoColeta)}&destination=${encodeURIComponent(p.enderecoEntrega)}`;
-        const div = document.createElement('div');
-        div.className = 'pedido';
-        div.innerHTML = `
-          <strong>Pedido #${i + 1}</strong><br/>
-          Nome: ${p.nome} <br/>
-          Telefone: ${p.telefone} <br/>
-          Coleta: ${p.enderecoColeta} <br/>
-          Entrega: ${p.enderecoEntrega} <br/>
-          <a href="${linkRota}" target="_blank" class="maps-link">Ver rota no Google Maps</a>
-        `;
-        lista.appendChild(div);
-      });
-    }
+      if (isNaN(km) || km < 1 || km > 50) {
+        document.getElementById('resultado').innerHTML = "Digite uma distância válida (1 a 50 km).";
+        return;
+      }
 
-    document.getElementById('formPedido').addEventListener('submit', e => {
-      e.preventDefault();
-      const pedido = {
-        nome: document.getElementById('nome').value,
-        telefone: document.getElementById('telefone').value,
-        enderecoColeta: document.getElementById('enderecoColeta').value,
-        enderecoEntrega: document.getElementById('enderecoEntrega').value,
-        status: 'pendente'
-      };
-      salvarPedido(pedido);
-      mostrarPedidos();
-      e.target.reset();
-      alert('Pedido enviado!');
-    });
+      if (km <= 5) {
+        preco = 10;
+      } else {
+        preco = 10 + (km - 5) * 2;
+      }
 
-    window.onload = mostrarPedidos;
-  </script>
-
-</body>
-</html>
+      doc
