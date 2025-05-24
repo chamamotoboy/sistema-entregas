@@ -23,57 +23,43 @@
 </head>
 <body>
 
-  <h1>Painel do Motoboy - Aceitar Pedidos</h1>
-  <p>Sua taxa mínima até 5km é R$10,00. Cada km extra custa R$2,00.</p>
-  <button onclick="trocarMotoboy()">Trocar Motoboy</button>
+  <h1>Painel do Motoboy</h1>
 
   <div id="listaPedidos"></div>
 
   <script>
-    let nomeMotoboy = localStorage.getItem('nomeMotoboy');
-
-    if (!nomeMotoboy) {
-      nomeMotoboy = prompt("Digite seu nome para acessar:");
-      if (nomeMotoboy) {
-        localStorage.setItem('nomeMotoboy', nomeMotoboy);
-      } else {
-        alert("Nome é obrigatório para acessar.");
-        location.reload();
-      }
-    }
-
-    function trocarMotoboy() {
-      localStorage.removeItem('nomeMotoboy');
-      location.reload();
-    }
-
+    // Carrega pedidos do localStorage
     function carregarPedidos() {
       return JSON.parse(localStorage.getItem('pedidos') || '[]');
     }
 
+    // Salva pedidos no localStorage
     function salvarPedidos(pedidos) {
       localStorage.setItem('pedidos', JSON.stringify(pedidos));
     }
 
+    // Atualiza status do pedido
     function atualizarStatus(index, novoStatus) {
       const pedidos = carregarPedidos();
-      pedidos[index].status = `${novoStatus} (por ${nomeMotoboy})`;
+      pedidos[index].status = novoStatus;
       salvarPedidos(pedidos);
       mostrarPedidos();
     }
 
+    // Cria link para o Google Maps com endereço codificado
     function criarLinkMapa(endereco, texto) {
       const url = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(endereco);
       return `<a href="${url}" target="_blank" class="maps-link">${texto}</a>`;
     }
 
+    // Mostra a lista de pedidos com controles para o motoboy
     function mostrarPedidos() {
       const pedidos = carregarPedidos();
       const lista = document.getElementById('listaPedidos');
       lista.innerHTML = '';
 
-      if (pedidos.length === 0) {
-        lista.innerHTML = '<p>Nenhum pedido encontrado. Verifique se há entregas pendentes.</p>';
+      if(pedidos.length === 0){
+        lista.innerHTML = '<p>Nenhum pedido encontrado.</p>';
         return;
       }
 
@@ -86,18 +72,18 @@
 
         div.innerHTML = `
           <strong>Pedido #${i + 1}</strong><br/>
-          Nome do cliente: ${p.nome} <br/>
+          Nome: ${p.nome} <br/>
           Telefone: ${p.telefone} <br/>
           Coleta: ${p.enderecoColeta} <br/>
           ${linkColeta} <br/>
           Entrega: ${p.enderecoEntrega} <br/>
           ${linkEntrega} <br/>
-          Status atual: <strong>${p.status}</strong><br/>
+          Status: <strong>${p.status}</strong><br/>
           <label>Atualizar status:
             <select onchange="atualizarStatus(${i}, this.value)">
-              <option value="">--Selecione--</option>
-              <option value="A caminho da coleta">A caminho da coleta</option>
-              <option value="Entregue">Entregue</option>
+              <option value="pendente" ${p.status === 'pendente' ? 'selected' : ''}>Pendente</option>
+              <option value="a caminho" ${p.status === 'a caminho' ? 'selected' : ''}>A caminho da coleta</option>
+              <option value="entregue" ${p.status === 'entregue' ? 'selected' : ''}>Entregue</option>
             </select>
           </label>
         `;
@@ -106,7 +92,9 @@
     }
 
     mostrarPedidos();
-    setInterval(mostrarPedidos, 5000);
+
+    // Atualiza os pedidos automaticamente a cada 15 segundos
+    setInterval(mostrarPedidos, 15000);
   </script>
 
 </body>
