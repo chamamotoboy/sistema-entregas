@@ -1,138 +1,87 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Cliente - Fazer Pedido</title>
-<style>
-  body {
-    font-family: Arial, sans-serif;
-    background: #007BFF;
-    color: white;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    margin: 0;
-    text-align: center;
-  }
-  main {
-    background: white;
-    color: #007BFF;
-    padding: 25px;
-    border-radius: 10px;
-    width: 320px;
-  }
-  h1 { margin-bottom: 15px; }
-  label {
-    display: block;
-    margin: 10px 0 5px;
-    font-weight: bold;
-  }
-  input, textarea {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid #007BFF;
-    border-radius: 5px;
-    font-size: 14px;
-    box-sizing: border-box;
-  }
-  button {
-    margin-top: 15px;
-    width: 100%;
-    background: #007BFF;
-    color: white;
-    font-weight: bold;
-    padding: 10px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-  }
-  button:hover {
-    background: #0056b3;
-  }
-  small {
-    display: block;
-    margin-top: 10px;
-    color: #333;
-  }
-</style>
+  <meta charset="UTF-8" />
+  <title>Solicitar Entrega - Sistema Simples</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; max-width: 600px; }
+    label { display: block; margin-top: 15px; }
+    input, textarea { width: 100%; padding: 8px; margin-top: 5px; }
+    button { margin-top: 15px; padding: 10px 20px; }
+    .pedido { border: 1px solid #ddd; padding: 10px; margin-top: 15px; }
+  </style>
 </head>
 <body>
-<main>
-  <h1>Olá, cliente!</h1>
-  <p>Esta página é para você fazer seu pedido de entrega. Preencha todos os dados corretamente.</p>
-  
-  <form id="pedidoForm">
-    <label for="nomeCliente">Nome do Cliente (quem entrega)</label>
-    <input type="text" id="nomeCliente" required />
 
-    <label for="telefoneCliente">Telefone do Cliente (quem entrega)</label>
-    <input type="tel" id="telefoneCliente" required />
+  <h1>Solicitar Entrega</h1>
 
-    <label for="enderecoColeta">Endereço de Coleta</label>
-    <textarea id="enderecoColeta" rows="2" required></textarea>
+  <form id="formPedido">
+    <label>Nome do Cliente:
+      <input type="text" id="nome" required />
+    </label>
 
-    <label for="telefoneColeta">Telefone da Coleta</label>
-    <input type="tel" id="telefoneColeta" required />
+    <label>Telefone:
+      <input type="tel" id="telefone" required />
+    </label>
 
-    <label for="enderecoEntrega">Endereço de Entrega</label>
-    <textarea id="enderecoEntrega" rows="2" required></textarea>
+    <label>Endereço de Coleta:
+      <textarea id="enderecoColeta" rows="2" required></textarea>
+    </label>
 
-    <label for="distanciaKm">Distância em km (para calcular a taxa)</label>
-    <input type="number" id="distanciaKm" min="1" max="50" required />
-
-    <small>Taxa mínima: R$ 10,00 para até 5km. Acima de 5km: R$ 2,00 por km.</small>
+    <label>Endereço de Entrega:
+      <textarea id="enderecoEntrega" rows="2" required></textarea>
+    </label>
 
     <button type="submit">Enviar Pedido</button>
   </form>
 
-  <p id="msgSucesso" style="color:green; display:none; margin-top:15px;">Pedido enviado com sucesso!</p>
-</main>
+  <h2>Pedidos enviados</h2>
+  <div id="listaPedidos"></div>
 
-<script>
-  // Função para calcular a taxa baseado na distância
-  function calcularTaxa(distancia) {
-    if (distancia <= 5) return 10;
-    else return distancia * 2;
-  }
+  <script>
+    // Função para salvar pedido no localStorage
+    function salvarPedido(pedido) {
+      const pedidos = JSON.parse(localStorage.getItem('pedidos') || '[]');
+      pedidos.push(pedido);
+      localStorage.setItem('pedidos', JSON.stringify(pedidos));
+    }
 
-  document.getElementById('pedidoForm').addEventListener('submit', function(e) {
-    e.preventDefault();
+    // Função para carregar e mostrar pedidos
+    function mostrarPedidos() {
+      const pedidos = JSON.parse(localStorage.getItem('pedidos') || '[]');
+      const lista = document.getElementById('listaPedidos');
+      lista.innerHTML = '';
+      pedidos.forEach((p, i) => {
+        const div = document.createElement('div');
+        div.className = 'pedido';
+        div.innerHTML = `
+          <strong>Pedido #${i + 1}</strong><br/>
+          Nome: ${p.nome} <br/>
+          Telefone: ${p.telefone} <br/>
+          Coleta: ${p.enderecoColeta} <br/>
+          Entrega: ${p.enderecoEntrega}
+        `;
+        lista.appendChild(div);
+      });
+    }
 
-    const nomeCliente = document.getElementById('nomeCliente').value.trim();
-    const telefoneCliente = document.getElementById('telefoneCliente').value.trim();
-    const enderecoColeta = document.getElementById('enderecoColeta').value.trim();
-    const telefoneColeta = document.getElementById('telefoneColeta').value.trim();
-    const enderecoEntrega = document.getElementById('enderecoEntrega').value.trim();
-    const distanciaKm = parseFloat(document.getElementById('distanciaKm').value);
+    document.getElementById('formPedido').addEventListener('submit', e => {
+      e.preventDefault();
+      const pedido = {
+        nome: document.getElementById('nome').value,
+        telefone: document.getElementById('telefone').value,
+        enderecoColeta: document.getElementById('enderecoColeta').value,
+        enderecoEntrega: document.getElementById('enderecoEntrega').value,
+        status: 'pendente'
+      };
+      salvarPedido(pedido);
+      mostrarPedidos();
+      e.target.reset();
+      alert('Pedido enviado!');
+    });
 
-    const taxa = calcularTaxa(distanciaKm);
+    mostrarPedidos();
+  </script>
 
-    // Cria o pedido com ID (timestamp) e status 'pendente'
-    const pedido = {
-      id: Date.now(),
-      nomeCliente,
-      telefoneCliente,
-      enderecoColeta,
-      telefoneColeta,
-      enderecoEntrega,
-      distanciaKm,
-      taxa,
-      status: 'pendente',
-      motoboyNome: '',
-      motoboyWhatsApp: '',
-      dataHoraPedido: new Date().toLocaleString()
-    };
-
-    // Pega pedidos do localStorage ou cria array vazio
-    let pedidos = JSON.parse(localStorage.getItem('pedidos')) || [];
-    pedidos.push(pedido);
-    localStorage.setItem('pedidos', JSON.stringify(pedidos));
-
-    this.reset();
-    document.getElementById('msgSucesso').style.display = 'block';
-  });
-</script>
 </body>
 </html>

@@ -1,166 +1,101 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Motoboy - Aceitar Entregas</title>
-<style>
-  body {
-    font-family: Arial, sans-serif;
-    background: #007BFF;
-    color: white;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-height: 100vh;
-    margin: 0;
-    text-align: center;
-    padding: 20px;
-  }
-  h1 { margin-bottom: 15px; }
-  input, button {
-    padding: 8px;
-    font-size: 14px;
-    margin: 5px 0;
-    border-radius: 5px;
-    border: none;
-  }
-  input {
-    width: 250px;
-  }
-  button {
-    background: white;
-    color: #007BFF;
-    font-weight: bold;
-    cursor: pointer;
-    width: 260px;
-  }
-  button:hover {
-    background: #0056b3;
-    color: white;
-  }
-  table {
-    width: 100%;
-    max-width: 700px;
-    border-collapse: collapse;
-    margin-top: 15px;
-    background: white;
-    color: #007BFF;
-  }
-  th, td {
-    border: 1px solid #007BFF;
-    padding: 8px;
-  }
-  a {
-    color: #007BFF;
-    text-decoration: none;
-  }
-  a:hover {
-    text-decoration: underline;
-  }
-</style>
+  <meta charset="UTF-8" />
+  <title>Painel do Motoboy</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; max-width: 700px; }
+    .pedido { border: 1px solid #ccc; padding: 10px; margin-bottom: 15px; }
+    button { margin-top: 10px; padding: 6px 12px; }
+    select { margin-top: 8px; }
+    a.maps-link {
+      display: inline-block;
+      margin-top: 6px;
+      margin-right: 10px;
+      color: #3498db;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    a.maps-link:hover {
+      text-decoration: underline;
+    }
+  </style>
 </head>
 <body>
 
-<h1>Olá, motoboy!</h1>
-<p>Para aceitar um pedido, preencha seu nome e WhatsApp abaixo e clique em "Aceitar".</p>
+  <h1>Painel do Motoboy</h1>
 
-<label for="nomeMotoboy">Seu Nome:</label>
-<input type="text" id="nomeMotoboy" placeholder="Nome completo" required />
+  <div id="listaPedidos"></div>
 
-<label for="whatsMotoboy">Seu WhatsApp:</label>
-<input type="tel" id="whatsMotoboy" placeholder="Número do WhatsApp" required />
-
-<table id="tabelaPedidos">
-  <thead>
-    <tr>
-      <th>Pedido ID</th>
-      <th>Cliente</th>
-      <th>Coleta</th>
-      <th>Entrega</th>
-      <th>Distância (km)</th>
-      <th>Taxa (R$)</th>
-      <th>Ação</th>
-    </tr>
-  </thead>
-  <tbody>
-    <!-- pedidos pendentes aparecerão aqui -->
-  </tbody>
-</table>
-
-<script>
-  const nomeInput = document.getElementById('nomeMotoboy');
-  const whatsInput = document.getElementById('whatsMotoboy');
-  const tabelaCorpo = document.querySelector('#tabelaPedidos tbody');
-
-  function criarLinkMaps(endereco) {
-    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(endereco)}`;
-  }
-
-  function carregarPedidos() {
-    tabelaCorpo.innerHTML = '';
-    let pedidos = JSON.parse(localStorage.getItem('pedidos')) || [];
-
-    // mostra só os pedidos pendentes
-    pedidos = pedidos.filter(p => p.status === 'pendente');
-
-    if (pedidos.length === 0) {
-      tabelaCorpo.innerHTML = `<tr><td colspan="7">Nenhum pedido pendente no momento.</td></tr>`;
-      return;
+  <script>
+    // Carrega pedidos do localStorage
+    function carregarPedidos() {
+      return JSON.parse(localStorage.getItem('pedidos') || '[]');
     }
 
-    pedidos.forEach(pedido => {
-      const tr = document.createElement('tr');
-
-      tr.innerHTML = `
-        <td>${pedido.id}</td>
-        <td>${pedido.nomeCliente}<br/>${pedido.telefoneCliente}</td>
-        <td><a href="${criarLinkMaps(pedido.enderecoColeta)}" target="_blank">Coleta</a><br/>${pedido.telefoneColeta}</td>
-        <td><a href="${criarLinkMaps(pedido.enderecoEntrega)}" target="_blank">Entrega</a></td>
-        <td>${pedido.distanciaKm}</td>
-        <td>${pedido.taxa.toFixed(2)}</td>
-        <td><button onclick="aceitarPedido(${pedido.id})">Aceitar</button></td>
-      `;
-      tabelaCorpo.appendChild(tr);
-    });
-  }
-
-  function aceitarPedido(id) {
-    const nomeMotoboy = nomeInput.value.trim();
-    const whatsMotoboy = whatsInput.value.trim();
-
-    if (!nomeMotoboy || !whatsMotoboy) {
-      alert('Por favor, preencha seu nome e WhatsApp antes de aceitar um pedido.');
-      return;
+    // Salva pedidos no localStorage
+    function salvarPedidos(pedidos) {
+      localStorage.setItem('pedidos', JSON.stringify(pedidos));
     }
 
-    let pedidos = JSON.parse(localStorage.getItem('pedidos')) || [];
-    const idx = pedidos.findIndex(p => p.id === id);
-
-    if (idx === -1) {
-      alert('Pedido não encontrado.');
-      carregarPedidos();
-      return;
+    // Atualiza status do pedido
+    function atualizarStatus(index, novoStatus) {
+      const pedidos = carregarPedidos();
+      pedidos[index].status = novoStatus;
+      salvarPedidos(pedidos);
+      mostrarPedidos();
     }
 
-    if (pedidos[idx].status !== 'pendente') {
-      alert('Pedido já foi aceito por outro motoboy.');
-      carregarPedidos();
-      return;
+    // Cria link para o Google Maps com endereço codificado
+    function criarLinkMapa(endereco, texto) {
+      const url = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(endereco);
+      return `<a href="${url}" target="_blank" class="maps-link">${texto}</a>`;
     }
 
-    pedidos[idx].status = 'em andamento';
-    pedidos[idx].motoboyNome = nomeMotoboy;
-    pedidos[idx].motoboyWhatsApp = whatsMotoboy;
-    pedidos[idx].dataHoraAceite = new Date().toLocaleString();
+    // Mostra a lista de pedidos com controles para o motoboy
+    function mostrarPedidos() {
+      const pedidos = carregarPedidos();
+      const lista = document.getElementById('listaPedidos');
+      lista.innerHTML = '';
 
-    localStorage.setItem('pedidos', JSON.stringify(pedidos));
-    alert('Pedido aceito com sucesso!');
-    carregarPedidos();
-  }
+      if(pedidos.length === 0){
+        lista.innerHTML = '<p>Nenhum pedido encontrado.</p>';
+        return;
+      }
 
-  carregarPedidos();
-</script>
+      pedidos.forEach((p, i) => {
+        const div = document.createElement('div');
+        div.className = 'pedido';
+
+        const linkColeta = criarLinkMapa(p.enderecoColeta, 'Ver Coleta no Maps');
+        const linkEntrega = criarLinkMapa(p.enderecoEntrega, 'Ver Entrega no Maps');
+
+        div.innerHTML = `
+          <strong>Pedido #${i + 1}</strong><br/>
+          Nome: ${p.nome} <br/>
+          Telefone: ${p.telefone} <br/>
+          Coleta: ${p.enderecoColeta} <br/>
+          ${linkColeta} <br/>
+          Entrega: ${p.enderecoEntrega} <br/>
+          ${linkEntrega} <br/>
+          Status: <strong>${p.status}</strong><br/>
+          <label>Atualizar status:
+            <select onchange="atualizarStatus(${i}, this.value)">
+              <option value="pendente" ${p.status === 'pendente' ? 'selected' : ''}>Pendente</option>
+              <option value="a caminho" ${p.status === 'a caminho' ? 'selected' : ''}>A caminho da coleta</option>
+              <option value="entregue" ${p.status === 'entregue' ? 'selected' : ''}>Entregue</option>
+            </select>
+          </label>
+        `;
+        lista.appendChild(div);
+      });
+    }
+
+    mostrarPedidos();
+
+    // Atualiza os pedidos automaticamente a cada 15 segundos
+    setInterval(mostrarPedidos, 15000);
+  </script>
 
 </body>
 </html>

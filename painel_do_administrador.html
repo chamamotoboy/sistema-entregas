@@ -1,101 +1,67 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Administrador - Controle de Pedidos</title>
-<style>
-  body {
-    font-family: Arial, sans-serif;
-    background: #007BFF;
-    color: white;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-height: 100vh;
-    margin: 0;
-    text-align: center;
-    padding: 20px;
-  }
-  h1 { margin-bottom: 15px; }
-  table {
-    width: 100%;
-    max-width: 900px;
-    border-collapse: collapse;
-    background: white;
-    color: #007BFF;
-  }
-  th, td {
-    border: 1px solid #007BFF;
-    padding: 8px;
-    vertical-align: top;
-  }
-  button {
-    background: #007BFF;
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    border-radius: 5px;
-    cursor: pointer;
-  }
-  button:hover {
-    background: #0056b3;
-  }
-  textarea {
-    width: 100%;
-    height: 100px;
-    margin-top: 10px;
-    resize: none;
-    padding: 8px;
-    border-radius: 5px;
-    border: 1px solid #007BFF;
-    font-family: monospace;
-    font-size: 14px;
-    color: #007BFF;
-  }
-</style>
+  <meta charset="UTF-8" />
+  <title>Painel do Administrador</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; max-width: 700px; }
+    .pedido { border: 1px solid #ccc; padding: 10px; margin-bottom: 15px; position: relative; }
+    button { position: absolute; top: 10px; right: 10px; padding: 5px 10px; background: #e74c3c; color: white; border: none; cursor: pointer; }
+    button:hover { background: #c0392b; }
+  </style>
 </head>
 <body>
 
-<h1>Olá, administrador!</h1>
-<p>Você vê todos os pedidos aqui. Clique no botão para copiar os dados do pedido e enviar no WhatsApp ou grupo.</p>
+  <h1>Painel do Administrador</h1>
 
-<table id="tabelaPedidos">
-  <thead>
-    <tr>
-      <th>ID</th>
-      <th>Cliente / Coleta</th>
-      <th>Entrega</th>
-      <th>Distância (km)</th>
-      <th>Taxa (R$)</th>
-      <th>Status</th>
-      <th>Motoboy</th>
-      <th>Data / Hora</th>
-      <th>Copiar Pedido</th>
-    </tr>
-  </thead>
-  <tbody>
-    <!-- pedidos aparecerão aqui -->
-  </tbody>
-</table>
+  <div id="listaPedidos"></div>
 
-<script>
-  const tabelaCorpo = document.querySelector('#tabelaPedidos tbody');
+  <script>
+    function carregarPedidos() {
+      return JSON.parse(localStorage.getItem('pedidos') || '[]');
+    }
 
-  function criarLinkMaps(endereco) {
-    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(endereco)}`;
-  }
+    function salvarPedidos(pedidos) {
+      localStorage.setItem('pedidos', JSON.stringify(pedidos));
+    }
 
-  function formatarPedidoTexto(pedido) {
-    return `
-Pedido ID: ${pedido.id}
-Cliente: ${pedido.nomeCliente} | Tel: ${pedido.telefoneCliente}
-Coleta: ${pedido.enderecoColeta} (Tel: ${pedido.telefoneColeta})
-Entrega: ${pedido.enderecoEntrega}
-Distância: ${pedido.distanciaKm} km
-Taxa: R$ ${pedido.taxa.toFixed(2)}
-Status: ${pedido.status}
-Motoboy: ${pedido.motoboyNome || '-'}
-WhatsApp do Motoboy: ${pedido.motoboyWhatsApp || '-'}
-Data/Hora Pedido: ${pedido.dataHoraPedido}
-${pedido.dataHoraAceite ? 'Data/Hora
+    function excluirPedido(index) {
+      if(confirm('Deseja realmente excluir este pedido?')) {
+        const pedidos = carregarPedidos();
+        pedidos.splice(index, 1);
+        salvarPedidos(pedidos);
+        mostrarPedidos();
+      }
+    }
+
+    function mostrarPedidos() {
+      const pedidos = carregarPedidos();
+      const lista = document.getElementById('listaPedidos');
+      lista.innerHTML = '';
+
+      if(pedidos.length === 0) {
+        lista.innerHTML = '<p>Nenhum pedido cadastrado.</p>';
+        return;
+      }
+
+      pedidos.forEach((p, i) => {
+        const div = document.createElement('div');
+        div.className = 'pedido';
+        div.innerHTML = `
+          <strong>Pedido #${i + 1}</strong><br/>
+          Nome: ${p.nome} <br/>
+          Telefone: ${p.telefone} <br/>
+          Coleta: ${p.enderecoColeta} <br/>
+          Entrega: ${p.enderecoEntrega} <br/>
+          Status: <strong>${p.status}</strong>
+          <button onclick="excluirPedido(${i})">Excluir</button>
+        `;
+        lista.appendChild(div);
+      });
+    }
+
+    mostrarPedidos();
+  </script>
+
+</body>
+</html>
