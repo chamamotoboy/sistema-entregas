@@ -28,43 +28,37 @@
   <div id="listaPedidos"></div>
 
   <script>
+    // Carrega pedidos do localStorage
     function carregarPedidos() {
       return JSON.parse(localStorage.getItem('pedidos') || '[]');
     }
 
+    // Salva pedidos no localStorage
     function salvarPedidos(pedidos) {
       localStorage.setItem('pedidos', JSON.stringify(pedidos));
     }
 
-    function enviarWhatsapp(pedido) {
-      const numero = '5545998356938'; // número do WhatsApp
-      const mensagem = `Olá! O pedido para entrega de ${pedido.nome}, do endereço ${pedido.enderecoColeta} até ${pedido.enderecoEntrega}, foi ENTREGUE com sucesso!`;
-      const link = `https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`;
-      window.open(link, '_blank');
-    }
-
+    // Atualiza status do pedido
     function atualizarStatus(index, novoStatus) {
       const pedidos = carregarPedidos();
       pedidos[index].status = novoStatus;
       salvarPedidos(pedidos);
       mostrarPedidos();
-
-      if (novoStatus === 'entregue') {
-        enviarWhatsapp(pedidos[index]);
-      }
     }
 
+    // Cria link para o Google Maps com endereço codificado
     function criarLinkMapa(endereco, texto) {
       const url = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(endereco);
       return `<a href="${url}" target="_blank" class="maps-link">${texto}</a>`;
     }
 
+    // Mostra a lista de pedidos com controles para o motoboy
     function mostrarPedidos() {
       const pedidos = carregarPedidos();
       const lista = document.getElementById('listaPedidos');
       lista.innerHTML = '';
 
-      if (pedidos.length === 0) {
+      if(pedidos.length === 0){
         lista.innerHTML = '<p>Nenhum pedido encontrado.</p>';
         return;
       }
@@ -98,6 +92,9 @@
     }
 
     mostrarPedidos();
+
+    // Atualiza os pedidos automaticamente a cada 15 segundos
+    setInterval(mostrarPedidos, 15000);
   </script>
 
 </body>
