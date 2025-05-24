@@ -3,237 +3,164 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Painel do Motoboy</title>
+<title>Motoboy - Aceitar Entregas</title>
 <style>
   body {
     font-family: Arial, sans-serif;
-    background: #f0f4ff;
-    color: #004080;
+    background: #007BFF;
+    color: white;
     display: flex;
-    justify-content: center;
-    align-items: flex-start;
+    flex-direction: column;
+    align-items: center;
     min-height: 100vh;
     margin: 0;
-    padding: 20px 0;
-  }
-  .container {
-    background: white;
-    padding: 25px 30px;
-    border-radius: 10px;
-    box-shadow: 0 0 10px #a0b9ff;
-    width: 400px;
     text-align: center;
+    padding: 20px;
   }
-  h1 {
-    margin-bottom: 15px;
-  }
-  p.instructions {
-    font-size: 0.9rem;
-    margin-bottom: 20px;
-    color: #002050cc;
-  }
-  label {
-    display: block;
-    margin-top: 10px;
-    font-weight: bold;
-    text-align: left;
-  }
-  input[type="text"], input[type="tel"] {
-    width: 100%;
+  h1 { margin-bottom: 15px; }
+  input, button {
     padding: 8px;
-    margin-top: 5px;
+    font-size: 14px;
+    margin: 5px 0;
     border-radius: 5px;
-    border: 1.5px solid #004080;
-    font-size: 1rem;
-    box-sizing: border-box;
-    color: #004080;
+    border: none;
+  }
+  input {
+    width: 250px;
   }
   button {
-    margin-top: 15px;
-    background: #004080;
-    color: white;
+    background: white;
+    color: #007BFF;
     font-weight: bold;
-    font-size: 1.1rem;
-    border: none;
-    border-radius: 7px;
-    width: 100%;
-    padding: 10px;
     cursor: pointer;
-    transition: background 0.3s ease;
+    width: 260px;
   }
   button:hover {
-    background: #002050;
+    background: #0056b3;
+    color: white;
   }
-  .pedido {
-    background: #e0e7ff;
-    border-radius: 8px;
-    padding: 12px;
-    margin: 15px 0;
-    text-align: left;
-    color: #003060;
+  table {
+    width: 100%;
+    max-width: 700px;
+    border-collapse: collapse;
+    margin-top: 15px;
+    background: white;
+    color: #007BFF;
   }
-  .pedido strong {
-    display: block;
-    margin-bottom: 6px;
+  th, td {
+    border: 1px solid #007BFF;
+    padding: 8px;
   }
-  .links-maps a {
-    color: #004080;
+  a {
+    color: #007BFF;
+    text-decoration: none;
+  }
+  a:hover {
     text-decoration: underline;
-    margin-right: 10px;
-    font-size: 0.9rem;
-  }
-  .status-em-andamento {
-    color: green;
-    font-weight: bold;
-  }
-  .no-pedidos {
-    margin-top: 25px;
-    font-style: italic;
-    color: #004080cc;
   }
 </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Olá, Motoboy!</h1>
-    <p class="instructions">
-      Esta é sua página para aceitar entregas.<br/>
-      Primeiro, insira seu nome e número do WhatsApp abaixo.<br/>
-      Depois, escolha um pedido pendente para aceitar.<br/>
-      O pedido ficará marcado como <span class="status-em-andamento">em andamento</span> com seu nome.<br/>
-      Você poderá acessar os endereços pelo link do Google Maps.<br/>
-      Boa sorte!
-    </p>
 
-    <label for="nomeMotoboy">Seu nome completo:</label>
-    <input type="text" id="nomeMotoboy" placeholder="Digite seu nome" />
+<h1>Olá, motoboy!</h1>
+<p>Para aceitar um pedido, preencha seu nome e WhatsApp abaixo e clique em "Aceitar".</p>
 
-    <label for="whatsappMotoboy">Seu WhatsApp (ex: 5591999999999):</label>
-    <input type="tel" id="whatsappMotoboy" placeholder="Só números, sem espaços" />
+<label for="nomeMotoboy">Seu Nome:</label>
+<input type="text" id="nomeMotoboy" placeholder="Nome completo" required />
 
-    <div id="listaPedidos"></div>
-  </div>
+<label for="whatsMotoboy">Seu WhatsApp:</label>
+<input type="tel" id="whatsMotoboy" placeholder="Número do WhatsApp" required />
+
+<table id="tabelaPedidos">
+  <thead>
+    <tr>
+      <th>Pedido ID</th>
+      <th>Cliente</th>
+      <th>Coleta</th>
+      <th>Entrega</th>
+      <th>Distância (km)</th>
+      <th>Taxa (R$)</th>
+      <th>Ação</th>
+    </tr>
+  </thead>
+  <tbody>
+    <!-- pedidos pendentes aparecerão aqui -->
+  </tbody>
+</table>
 
 <script>
-  const nomeMotoboyInput = document.getElementById('nomeMotoboy');
-  const whatsappMotoboyInput = document.getElementById('whatsappMotoboy');
-  const listaPedidosDiv = document.getElementById('listaPedidos');
+  const nomeInput = document.getElementById('nomeMotoboy');
+  const whatsInput = document.getElementById('whatsMotoboy');
+  const tabelaCorpo = document.querySelector('#tabelaPedidos tbody');
+
+  function criarLinkMaps(endereco) {
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(endereco)}`;
+  }
 
   function carregarPedidos() {
+    tabelaCorpo.innerHTML = '';
     let pedidos = JSON.parse(localStorage.getItem('pedidos')) || [];
-    return pedidos;
-  }
 
-  function salvarPedidos(pedidos) {
-    localStorage.setItem('pedidos', JSON.stringify(pedidos));
-  }
+    // mostra só os pedidos pendentes
+    pedidos = pedidos.filter(p => p.status === 'pendente');
 
-  function criarLinkGoogleMaps(endereco) {
-    if (!endereco.trim()) return '';
-    return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(endereco);
-  }
-
-  function atualizarLista() {
-    const pedidos = carregarPedidos();
-
-    // Filtra pedidos pendentes (status == "pendente") e em andamento com este motoboy
-    const nomeMotoboy = nomeMotoboyInput.value.trim();
-    const whatsappMotoboy = whatsappMotoboyInput.value.trim();
-
-    if (!nomeMotoboy || !whatsappMotoboy) {
-      listaPedidosDiv.innerHTML = '<p style="color:#800000;">Por favor, preencha seu nome e WhatsApp para ver os pedidos.</p>';
+    if (pedidos.length === 0) {
+      tabelaCorpo.innerHTML = `<tr><td colspan="7">Nenhum pedido pendente no momento.</td></tr>`;
       return;
     }
 
-    let html = '';
+    pedidos.forEach(pedido => {
+      const tr = document.createElement('tr');
 
-    // Mostra pedidos pendentes
-    const pendentes = pedidos.filter(p => p.status === 'pendente');
-    if (pendentes.length === 0) {
-      html += '<p class="no-pedidos">Não há pedidos pendentes no momento.</p>';
-    } else {
-      html += '<h3>Pedidos Pendentes:</h3>';
-      pendentes.forEach(pedido => {
-        html += `
-          <div class="pedido">
-            <strong>Pedido ID: ${pedido.id}</strong>
-            Nome do Cliente: ${pedido.nomeCliente}<br/>
-            Telefone para entrega: ${pedido.telCliente}<br/>
-            Distância: ${pedido.distanciaKm} km<br/>
-            Taxa: R$ ${pedido.taxaEntrega.toFixed(2)}<br/>
-            <div class="links-maps">
-              <a href="${criarLinkGoogleMaps(pedido.enderecoColeta)}" target="_blank" rel="noopener noreferrer">Coleta</a>
-              <a href="${criarLinkGoogleMaps(pedido.enderecoEntrega)}" target="_blank" rel="noopener noreferrer">Entrega</a>
-            </div>
-            <button onclick="aceitarPedido(${pedido.id})">Aceitar pedido</button>
-          </div>
-        `;
-      });
-    }
-
-    // Mostra pedidos em andamento do motoboy
-    const emAndamento = pedidos.filter(p => p.status === 'em andamento' && p.motoboyNome === nomeMotoboy && p.motoboyWhatsApp === whatsappMotoboy);
-    if (emAndamento.length > 0) {
-      html += '<h3>Seus pedidos em andamento:</h3>';
-      emAndamento.forEach(pedido => {
-        html += `
-          <div class="pedido" style="background:#d0f0d0; color:#005000;">
-            <strong>Pedido ID: ${pedido.id}</strong>
-            Nome do Cliente: ${pedido.nomeCliente}<br/>
-            Telefone para entrega: ${pedido.telCliente}<br/>
-            Distância: ${pedido.distanciaKm} km<br/>
-            Taxa: R$ ${pedido.taxaEntrega.toFixed(2)}<br/>
-            Status: <span class="status-em-andamento">${pedido.status}</span><br/>
-            <div class="links-maps">
-              <a href="${criarLinkGoogleMaps(pedido.enderecoColeta)}" target="_blank" rel="noopener noreferrer">Coleta</a>
-              <a href="${criarLinkGoogleMaps(pedido.enderecoEntrega)}" target="_blank" rel="noopener noreferrer">Entrega</a>
-            </div>
-          </div>
-        `;
-      });
-    }
-
-    listaPedidosDiv.innerHTML = html;
+      tr.innerHTML = `
+        <td>${pedido.id}</td>
+        <td>${pedido.nomeCliente}<br/>${pedido.telefoneCliente}</td>
+        <td><a href="${criarLinkMaps(pedido.enderecoColeta)}" target="_blank">Coleta</a><br/>${pedido.telefoneColeta}</td>
+        <td><a href="${criarLinkMaps(pedido.enderecoEntrega)}" target="_blank">Entrega</a></td>
+        <td>${pedido.distanciaKm}</td>
+        <td>${pedido.taxa.toFixed(2)}</td>
+        <td><button onclick="aceitarPedido(${pedido.id})">Aceitar</button></td>
+      `;
+      tabelaCorpo.appendChild(tr);
+    });
   }
 
   function aceitarPedido(id) {
-    const nomeMotoboy = nomeMotoboyInput.value.trim();
-    const whatsappMotoboy = whatsappMotoboyInput.value.trim();
+    const nomeMotoboy = nomeInput.value.trim();
+    const whatsMotoboy = whatsInput.value.trim();
 
-    if (!nomeMotoboy || !whatsappMotoboy) {
+    if (!nomeMotoboy || !whatsMotoboy) {
       alert('Por favor, preencha seu nome e WhatsApp antes de aceitar um pedido.');
       return;
     }
 
-    let pedidos = carregarPedidos();
-    const index = pedidos.findIndex(p => p.id === id);
-    if (index === -1) {
+    let pedidos = JSON.parse(localStorage.getItem('pedidos')) || [];
+    const idx = pedidos.findIndex(p => p.id === id);
+
+    if (idx === -1) {
       alert('Pedido não encontrado.');
-      atualizarLista();
+      carregarPedidos();
       return;
     }
 
-    if (pedidos[index].status !== 'pendente') {
-      alert('Este pedido já foi aceito por outro motoboy.');
-      atualizarLista();
+    if (pedidos[idx].status !== 'pendente') {
+      alert('Pedido já foi aceito por outro motoboy.');
+      carregarPedidos();
       return;
     }
 
-    pedidos[index].status = 'em andamento';
-    pedidos[index].motoboyNome = nomeMotoboy;
-    pedidos[index].motoboyWhatsApp = whatsappMotoboy;
-    pedidos[index].horaAceite = new Date().toISOString();
+    pedidos[idx].status = 'em andamento';
+    pedidos[idx].motoboyNome = nomeMotoboy;
+    pedidos[idx].motoboyWhatsApp = whatsMotoboy;
+    pedidos[idx].dataHoraAceite = new Date().toLocaleString();
 
-    salvarPedidos(pedidos);
+    localStorage.setItem('pedidos', JSON.stringify(pedidos));
     alert('Pedido aceito com sucesso!');
-
-    atualizarLista();
+    carregarPedidos();
   }
 
-  nomeMotoboyInput.addEventListener('input', atualizarLista);
-  whatsappMotoboyInput.addEventListener('input', atualizarLista);
-
-  window.onload = atualizarLista;
+  carregarPedidos();
 </script>
+
 </body>
 </html>
