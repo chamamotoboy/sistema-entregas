@@ -1,87 +1,182 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <title>Solicitar Entrega - Sistema Simples</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 20px; max-width: 600px; }
-    label { display: block; margin-top: 15px; }
-    input, textarea { width: 100%; padding: 8px; margin-top: 5px; }
-    button { margin-top: 15px; padding: 10px 20px; }
-    .pedido { border: 1px solid #ddd; padding: 10px; margin-top: 15px; }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Pedido de Entrega - Cliente</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f0f4ff;
+    color: #004080;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+  }
+  .container {
+    background: white;
+    padding: 25px 30px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px #a0b9ff;
+    width: 350px;
+    text-align: center;
+  }
+  h1 {
+    margin-bottom: 20px;
+  }
+  label {
+    display: block;
+    margin-top: 15px;
+    font-weight: bold;
+  }
+  input[type="text"], input[type="tel"], input[type="number"] {
+    width: 100%;
+    padding: 8px;
+    margin-top: 5px;
+    border-radius: 5px;
+    border: 1.5px solid #004080;
+    font-size: 1rem;
+    box-sizing: border-box;
+    color: #004080;
+  }
+  .link-maps {
+    margin-top: 5px;
+    font-size: 0.9rem;
+  }
+  .link-maps a {
+    color: #004080;
+    text-decoration: underline;
+  }
+  .taxa {
+    margin-top: 15px;
+    font-weight: bold;
+    font-size: 1.1rem;
+    color: #002050;
+  }
+  button {
+    margin-top: 25px;
+    background: #004080;
+    color: white;
+    font-weight: bold;
+    font-size: 1.1rem;
+    border: none;
+    border-radius: 7px;
+    width: 100%;
+    padding: 10px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+  button:hover {
+    background: #002050;
+  }
+  .info {
+    font-size: 0.9rem;
+    margin-top: 12px;
+    color: #004080cc;
+  }
+</style>
 </head>
 <body>
+  <div class="container">
+    <h1>Olá, cliente! Faça seu pedido aqui</h1>
+    <form id="pedidoForm">
+      <label for="nomeCliente">Nome do cliente para coleta:</label>
+      <input type="text" id="nomeCliente" name="nomeCliente" placeholder="Seu nome completo" required />
 
-  <h1>Solicitar Entrega</h1>
+      <label for="telCliente">Telefone para entrega:</label>
+      <input type="tel" id="telCliente" name="telCliente" placeholder="(00) 90000-0000" pattern="[0-9\s()+-]{8,15}" required />
 
-  <form id="formPedido">
-    <label>Nome do Cliente:
-      <input type="text" id="nome" required />
-    </label>
+      <label for="enderecoColeta">Endereço de coleta:</label>
+      <input type="text" id="enderecoColeta" name="enderecoColeta" placeholder="Rua, número, bairro, cidade" required />
+      <div class="link-maps" id="linkColeta"></div>
 
-    <label>Telefone:
-      <input type="tel" id="telefone" required />
-    </label>
+      <label for="enderecoEntrega">Endereço de entrega:</label>
+      <input type="text" id="enderecoEntrega" name="enderecoEntrega" placeholder="Rua, número, bairro, cidade" required />
+      <div class="link-maps" id="linkEntrega"></div>
 
-    <label>Endereço de Coleta:
-      <textarea id="enderecoColeta" rows="2" required></textarea>
-    </label>
+      <label for="distanciaKm">Distância em km (aproximada):</label>
+      <input type="number" id="distanciaKm" name="distanciaKm" min="0" step="0.1" placeholder="Ex: 7.5" required />
 
-    <label>Endereço de Entrega:
-      <textarea id="enderecoEntrega" rows="2" required></textarea>
-    </label>
+      <div class="taxa" id="taxaEntrega">Taxa de entrega: R$ 0,00</div>
 
-    <button type="submit">Enviar Pedido</button>
-  </form>
+      <button type="submit">Enviar Pedido</button>
+    </form>
+    <div class="info">
+      Após enviar, seu pedido será registrado e o administrador poderá contatar você pelo telefone.
+    </div>
+  </div>
 
-  <h2>Pedidos enviados</h2>
-  <div id="listaPedidos"></div>
+<script>
+  const enderecoColeta = document.getElementById('enderecoColeta');
+  const enderecoEntrega = document.getElementById('enderecoEntrega');
+  const linkColeta = document.getElementById('linkColeta');
+  const linkEntrega = document.getElementById('linkEntrega');
+  const distanciaKm = document.getElementById('distanciaKm');
+  const taxaEntrega = document.getElementById('taxaEntrega');
+  const form = document.getElementById('pedidoForm');
 
-  <script>
-    // Função para salvar pedido no localStorage
-    function salvarPedido(pedido) {
-      const pedidos = JSON.parse(localStorage.getItem('pedidos') || '[]');
-      pedidos.push(pedido);
-      localStorage.setItem('pedidos', JSON.stringify(pedidos));
-    }
+  function criarLinkGoogleMaps(endereco) {
+    if (!endereco.trim()) return '';
+    return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(endereco);
+  }
 
-    // Função para carregar e mostrar pedidos
-    function mostrarPedidos() {
-      const pedidos = JSON.parse(localStorage.getItem('pedidos') || '[]');
-      const lista = document.getElementById('listaPedidos');
-      lista.innerHTML = '';
-      pedidos.forEach((p, i) => {
-        const div = document.createElement('div');
-        div.className = 'pedido';
-        div.innerHTML = `
-          <strong>Pedido #${i + 1}</strong><br/>
-          Nome: ${p.nome} <br/>
-          Telefone: ${p.telefone} <br/>
-          Coleta: ${p.enderecoColeta} <br/>
-          Entrega: ${p.enderecoEntrega}
-        `;
-        lista.appendChild(div);
-      });
-    }
+  function atualizarLinks() {
+    const urlColeta = criarLinkGoogleMaps(enderecoColeta.value);
+    const urlEntrega = criarLinkGoogleMaps(enderecoEntrega.value);
 
-    document.getElementById('formPedido').addEventListener('submit', e => {
-      e.preventDefault();
-      const pedido = {
-        nome: document.getElementById('nome').value,
-        telefone: document.getElementById('telefone').value,
-        enderecoColeta: document.getElementById('enderecoColeta').value,
-        enderecoEntrega: document.getElementById('enderecoEntrega').value,
-        status: 'pendente'
-      };
-      salvarPedido(pedido);
-      mostrarPedidos();
-      e.target.reset();
-      alert('Pedido enviado!');
-    });
+    linkColeta.innerHTML = urlColeta ? `<a href="${urlColeta}" target="_blank" rel="noopener noreferrer">Ver no Google Maps</a>` : '';
+    linkEntrega.innerHTML = urlEntrega ? `<a href="${urlEntrega}" target="_blank" rel="noopener noreferrer">Ver no Google Maps</a>` : '';
+  }
 
-    mostrarPedidos();
-  </script>
+  function calcularTaxa(dist) {
+    dist = parseFloat(dist);
+    if (isNaN(dist) || dist < 0) return 0;
+    if (dist <= 5) return 10;
+    return 10 + (dist - 5) * 2;
+  }
 
+  function atualizarTaxa() {
+    const dist = distanciaKm.value;
+    const taxa = calcularTaxa(dist);
+    taxaEntrega.textContent = `Taxa de entrega: R$ ${taxa.toFixed(2)}`;
+  }
+
+  enderecoColeta.addEventListener('input', atualizarLinks);
+  enderecoEntrega.addEventListener('input', atualizarLinks);
+  distanciaKm.addEventListener('input', atualizarTaxa);
+
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+
+    const pedido = {
+      id: Date.now(),
+      nomeCliente: form.nomeCliente.value.trim(),
+      telCliente: form.telCliente.value.trim(),
+      enderecoColeta: form.enderecoColeta.value.trim(),
+      enderecoEntrega: form.enderecoEntrega.value.trim(),
+      distanciaKm: parseFloat(form.distanciaKm.value),
+      taxaEntrega: calcularTaxa(form.distanciaKm.value),
+      status: 'pendente',
+      dataPedido: new Date().toISOString()
+    };
+
+    // Pega pedidos atuais do localStorage
+    let pedidos = JSON.parse(localStorage.getItem('pedidos')) || [];
+    pedidos.push(pedido);
+    localStorage.setItem('pedidos', JSON.stringify(pedidos));
+
+    alert('Pedido enviado com sucesso! O administrador verá os dados para contato.');
+
+    form.reset();
+    atualizarLinks();
+    atualizarTaxa();
+  });
+
+  // Inicializa links e taxa ao carregar a página
+  atualizarLinks();
+  atualizarTaxa();
+</script>
 </body>
 </html>
