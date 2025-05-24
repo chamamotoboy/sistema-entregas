@@ -7,18 +7,8 @@
     body { font-family: Arial, sans-serif; margin: 20px; max-width: 700px; }
     .pedido { border: 1px solid #ccc; padding: 10px; margin-bottom: 15px; }
     button { margin-top: 10px; padding: 6px 12px; }
-    select { margin-top: 8px; }
-    a.maps-link {
-      display: inline-block;
-      margin-top: 6px;
-      margin-right: 10px;
-      color: #3498db;
-      text-decoration: none;
-      font-weight: bold;
-    }
-    a.maps-link:hover {
-      text-decoration: underline;
-    }
+    select, input[type=number] { margin-top: 8px; padding: 4px; width: 100%; box-sizing: border-box; }
+    .taxa { margin-top: 8px; font-weight: bold; }
   </style>
 </head>
 <body>
@@ -28,6 +18,11 @@
   <div id="listaPedidos"></div>
 
   <script>
+    // Tabela de preços
+    const precoMinimo = 10; // R$10 até 5 km
+    const kmMinimo = 5;
+    const precoPorKm = 2; // R$2 por km adicional
+
     // Carrega pedidos do localStorage
     function carregarPedidos() {
       return JSON.parse(localStorage.getItem('pedidos') || '[]');
@@ -38,18 +33,21 @@
       localStorage.setItem('pedidos', JSON.stringify(pedidos));
     }
 
-    // Atualiza status do pedido
-    function atualizarStatus(index, novoStatus) {
-      const pedidos = carregarPedidos();
-      pedidos[index].status = novoStatus;
-      salvarPedidos(pedidos);
-      mostrarPedidos();
+    // Calcula a taxa conforme km informado
+    function calcularTaxa(km) {
+      km = Number(km);
+      if(isNaN(km) || km <= 0) return 0;
+      if(km <= kmMinimo) return precoMinimo;
+      return precoMinimo + (km - kmMinimo) * precoPorKm;
     }
 
-    // Cria link para o Google Maps com endereço codificado
-    function criarLinkMapa(endereco, texto) {
-      const url = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(endereco);
-      return `<a href="${url}" target="_blank" class="maps-link">${texto}</a>`;
+    // Atualiza status do pedido e salva a taxa
+    function atualizarStatus(index, novoStatus, taxa) {
+      const pedidos = carregarPedidos();
+      pedidos[index].status = novoStatus;
+      pedidos[index].taxa = taxa; // salva taxa cobrada
+      salvarPedidos(pedidos);
+      mostrarPedidos();
     }
 
     // Mostra a lista de pedidos com controles para o motoboy
@@ -64,31 +62,61 @@
       }
 
       pedidos.forEach((p, i) => {
+        const taxaAtual = p.taxa || 0;
+        const kmAtual = p.km || '';
+
         const div = document.createElement('div');
         div.className = 'pedido';
-
-        const linkColeta = criarLinkMapa(p.enderecoColeta, 'Ver Coleta no Maps');
-        const linkEntrega = criarLinkMapa(p.enderecoEntrega, 'Ver Entrega no Maps');
-
         div.innerHTML = `
           <strong>Pedido #${i + 1}</strong><br/>
           Nome: ${p.nome} <br/>
           Telefone: ${p.telefone} <br/>
           Coleta: ${p.enderecoColeta} <br/>
-          ${linkColeta} <br/>
           Entrega: ${p.enderecoEntrega} <br/>
-          ${linkEntrega} <br/>
           Status: <strong>${p.status}</strong><br/>
+
+          <div>
+            <label>Distância da entrega (km):<br/>
+              <input type="number" min="0" step="0.1" value="${kmAtual}" id="km-${i}" />
+            </label>
+            <div class="taxa" id="taxa-${i}">Taxa estimada: R$ ${taxaAtual.toFixed(2)}</div>
+          </div>
+
           <label>Atualizar status:
-            <select onchange="atualizarStatus(${i}, this.value)">
+            <select id="status-${i}">
               <option value="pendente" ${p.status === 'pendente' ? 'selected' : ''}>Pendente</option>
               <option value="a caminho" ${p.status === 'a caminho' ? 'selected' : ''}>A caminho da coleta</option>
               <option value="entregue" ${p.status === 'entregue' ? 'selected' : ''}>Entregue</option>
             </select>
           </label>
+          <button onclick="confirmarAtualizacao(${i})">Atualizar</button>
         `;
         lista.appendChild(div);
+
+        // Atualiza a taxa quando muda o km
+        document.getElementById(`km-${i}`).addEventListener('input', (e) => {
+          const km = e.target.value;
+          const taxa = calcularTaxa(km);
+          document.getElementById(`taxa-${i}`).textContent = `Taxa estimada: R$ ${taxa.toFixed(2)}`;
+        });
       });
+    }
+
+    // Confirma a atualização do pedido
+    function confirmarAtualizacao(index) {
+      const kmInput = document.getElementById(`km-${index}`);
+      const statusSelect = document.getElementById(`status-${index}`);
+      const km = Number(kmInput.value);
+      if(isNaN(km) || km <= 0){
+        alert('Por favor, insira uma distância válida em km.');
+        return;
+      }
+      const taxa = calcularTaxa(km);
+      if(confirm(`Confirmar atualização?\nDistância: ${km} km\nTaxa: R$ ${taxa.toFixed(2)}\nStatus: ${statusSelect.value}`)){
+        const pedidos = carregarPedidos();
+        pedidos[index].km = km;
+        atualizarStatus(index, statusSelect.value, taxa);
+      }
     }
 
     mostrarPedidos();
