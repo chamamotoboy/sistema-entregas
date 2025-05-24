@@ -67,8 +67,8 @@
         const div = document.createElement('div');
         div.className = 'pedido';
 
-        const linkColeta = criarLinkMapa(p.enderecoColeta, 'Ver Coleta no Maps');
-        const linkEntrega = criarLinkMapa(p.enderecoEntrega, 'Ver Entrega no Maps');
+        const linkColeta = criarLinkMapa(p.enderecoColeta, 'Ver Coleta no Google Maps');
+        const linkEntrega = criarLinkMapa(p.enderecoEntrega, 'Ver Entrega no Goole Maps');
 
         div.innerHTML = `
           <strong>Pedido #${i + 1}</strong><br/>
@@ -93,8 +93,8 @@
 
     mostrarPedidos();
 
-    // Atualiza os pedidos automaticamente a cada 15 segundos
-    setInterval(mostrarPedidos, 15000);
+    // Atualiza os pedidos automaticamente a cada 5 segundos
+    setInterval(mostrarPedidos, 5000);
   </script>
 
 </body>
