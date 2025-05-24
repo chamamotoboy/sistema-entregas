@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <center><title>Painel Para Motoboy Aceitar Pedidos</title><center>
+  <title>Painel Para Motoboy Aceitar Pedidos</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; max-width: 700px; }
     .pedido { border: 1px solid #ccc; padding: 10px; margin-bottom: 15px; }
@@ -58,8 +58,8 @@
       const lista = document.getElementById('listaPedidos');
       lista.innerHTML = '';
 
-      if(pedidos.length === 0){
-        lista.innerHTML = '<p>Nenhum pedido encontrado quando tiver pedidos, aqui você aceita clica nas etapas  em coleta e quando entreguar clique em, pedido entregue. Lembre-se a nossa taxa minima é R$ 10,00 ata 5 km acima disso exemplo 6 km serão 6 x 2,00  R$ 12,00  e assim por diante  7 km x 2,00  R$ 14,00 blz não cobre  fora da tabela o preço do frete é seu nao precisa nos repassar,taxa de ponto e nem comiçoes ok BOAS ENTREGAS ATT ANDRE GERENTE DA EXPRESS FOZ.</p>';
+      if (pedidos.length === 0) {
+        lista.innerHTML = '<p>Nenhum pedido encontrado. Quando houver pedidos, aqui você poderá aceitar, atualizar o status para "a caminho" e "entregue". Lembre-se da taxa mínima de R$ 10,00 até 5 km, acima disso o valor é R$ 2,00 por km adicional.</p>';
         return;
       }
 
@@ -68,12 +68,14 @@
         div.className = 'pedido';
 
         const linkColeta = criarLinkMapa(p.enderecoColeta, 'Ver Coleta no Google Maps');
-        const linkEntrega = criarLinkMapa(p.enderecoEntrega, 'Ver Entrega no Goole Maps');
+        const linkEntrega = criarLinkMapa(p.enderecoEntrega, 'Ver Entrega no Google Maps');
 
         div.innerHTML = `
           <strong>Pedido #${i + 1}</strong><br/>
           Nome: ${p.nome} <br/>
           Telefone: ${p.telefone} <br/>
+          Distância: ${p.km} km <br/>
+          Preço: R$ ${p.preco.toFixed(2)} <br/>
           Coleta: ${p.enderecoColeta} <br/>
           ${linkColeta} <br/>
           Entrega: ${p.enderecoEntrega} <br/>
