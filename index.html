@@ -1,101 +1,63 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <title>Painel do Motoboy</title>
+  <meta charset="UTF-8">
+  <title>Express Foz - Coleta e Entregas</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; max-width: 700px; }
-    .pedido { border: 1px solid #ccc; padding: 10px; margin-bottom: 15px; }
-    button { margin-top: 10px; padding: 6px 12px; }
-    select { margin-top: 8px; }
-    a.maps-link {
-      display: inline-block;
-      margin-top: 6px;
-      margin-right: 10px;
-      color: #3498db;
-      text-decoration: none;
-      font-weight: bold;
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
     }
-    a.maps-link:hover {
-      text-decoration: underline;
+
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+    }
+
+    .container {
+      text-align: center;
+      background: #fff;
+      padding: 40px 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 400px;
+    }
+
+    h1 {
+      margin-bottom: 30px;
+      color: #333;
+    }
+
+    a {
+      display: block;
+      margin: 10px 0;
+      padding: 12px;
+      background-color: #007bff;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 5px;
+      font-weight: bold;
+      transition: background-color 0.3s ease;
+    }
+
+    a:hover {
+      background-color: #0056b3;
     }
   </style>
 </head>
 <body>
 
-  <h1>Painel do Motoboy</h1>
-
-  <div id="listaPedidos"></div>
-
-  <script>
-    // Carrega pedidos do localStorage
-    function carregarPedidos() {
-      return JSON.parse(localStorage.getItem('pedidos') || '[]');
-    }
-
-    // Salva pedidos no localStorage
-    function salvarPedidos(pedidos) {
-      localStorage.setItem('pedidos', JSON.stringify(pedidos));
-    }
-
-    // Atualiza status do pedido
-    function atualizarStatus(index, novoStatus) {
-      const pedidos = carregarPedidos();
-      pedidos[index].status = novoStatus;
-      salvarPedidos(pedidos);
-      mostrarPedidos();
-    }
-
-    // Cria link para o Google Maps com endereço codificado
-    function criarLinkMapa(endereco, texto) {
-      const url = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(endereco);
-      return `<a href="${url}" target="_blank" class="maps-link">${texto}</a>`;
-    }
-
-    // Mostra a lista de pedidos com controles para o motoboy
-    function mostrarPedidos() {
-      const pedidos = carregarPedidos();
-      const lista = document.getElementById('listaPedidos');
-      lista.innerHTML = '';
-
-      if(pedidos.length === 0){
-        lista.innerHTML = '<p>Nenhum pedido encontrado.</p>';
-        return;
-      }
-
-      pedidos.forEach((p, i) => {
-        const div = document.createElement('div');
-        div.className = 'pedido';
-
-        const linkColeta = criarLinkMapa(p.enderecoColeta, 'Ver Coleta no Maps');
-        const linkEntrega = criarLinkMapa(p.enderecoEntrega, 'Ver Entrega no Maps');
-
-        div.innerHTML = `
-          <strong>Pedido #${i + 1}</strong><br/>
-          Nome: ${p.nome} <br/>
-          Telefone: ${p.telefone} <br/>
-          Coleta: ${p.enderecoColeta} <br/>
-          ${linkColeta} <br/>
-          Entrega: ${p.enderecoEntrega} <br/>
-          ${linkEntrega} <br/>
-          Status: <strong>${p.status}</strong><br/>
-          <label>Atualizar status:
-            <select onchange="atualizarStatus(${i}, this.value)">
-              <option value="pendente" ${p.status === 'pendente' ? 'selected' : ''}>Pendente</option>
-              <option value="a caminho" ${p.status === 'a caminho' ? 'selected' : ''}>A caminho da coleta</option>
-              <option value="entregue" ${p.status === 'entregue' ? 'selected' : ''}>Entregue</option>
-            </select>
-          </label>
-        `;
-        lista.appendChild(div);
-      });
-    }
-
-    mostrarPedidos();
-
-    // Atualiza os pedidos automaticamente a cada 15 segundos
-    setInterval(mostrarPedidos, 15000);
-  </script>
+  <div class="container">
+    <h1>Express Foz</h1>
+    <a href="painel_do_cliente.php">Painel do Cliente</a>
+    <a href="painel_do_motoboy.php">Painel do Motoboy</a>
+    <a href="painel_do_administrador.php">Painel do Administrador</a>
+  </div>
 
 </body>
 </html>
