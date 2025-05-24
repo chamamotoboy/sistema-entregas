@@ -9,6 +9,14 @@
     input, textarea { width: 100%; padding: 8px; margin-top: 5px; }
     button { margin-top: 15px; padding: 10px 20px; }
     .pedido { border: 1px solid #ddd; padding: 10px; margin-top: 15px; }
+    .taxa { margin-top: 10px; font-weight: bold; }
+    a.maps-link {
+      color: #0066cc;
+      text-decoration: none;
+    }
+    a.maps-link:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
@@ -27,10 +35,24 @@
     <label>Endereço de Coleta:
       <textarea id="enderecoColeta" rows="2" required></textarea>
     </label>
+    <label>Latitude Coleta:
+      <input type="number" id="latColeta" step="any" required placeholder="Ex: -25.516" />
+    </label>
+    <label>Longitude Coleta:
+      <input type="number" id="lonColeta" step="any" required placeholder="Ex: -54.585" />
+    </label>
 
     <label>Endereço de Entrega:
       <textarea id="enderecoEntrega" rows="2" required></textarea>
     </label>
+    <label>Latitude Entrega:
+      <input type="number" id="latEntrega" step="any" required placeholder="Ex: -25.523" />
+    </label>
+    <label>Longitude Entrega:
+      <input type="number" id="lonEntrega" step="any" required placeholder="Ex: -54.595" />
+    </label>
+
+    <div class="taxa" id="infoTaxa">Taxa mínima: R$ 10,00 até 5 km</div>
 
     <button type="submit">Enviar Pedido</button>
   </form>
@@ -39,6 +61,41 @@
   <div id="listaPedidos"></div>
 
   <script>
+    // Calcula distância entre dois pontos geográficos em km usando fórmula Haversine
+    function calcularDistanciaHaversine(lat1, lon1, lat2, lon2) {
+      function toRad(x) {
+        return x * Math.PI / 180;
+      }
+      const R = 6371; // raio da Terra em km
+      const dLat = toRad(lat2 - lat1);
+      const dLon = toRad(lon2 - lon1);
+      const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c;
+    }
+
+    function calcularTaxa(distanciaKm) {
+      const taxaMinima = 10.00;
+      if(distanciaKm <= 5) {
+        return taxaMinima;
+      } else {
+        // Exemplo: R$10 + R$2 por km acima de 5
+        return taxaMinima + (distanciaKm - 5) * 2;
+      }
+    }
+
+    function formatarValor(valor) {
+      return valor.toFixed(2).replace('.', ',');
+    }
+
+    // Função para gerar URL do Google Maps para um endereço
+    function gerarLinkGoogleMaps(endereco) {
+      const baseUrl = 'https://www.google.com/maps/search/?api=1&query=';
+      return baseUrl + encodeURIComponent(endereco);
+    }
+
     // Função para salvar pedido no localStorage
     function salvarPedido(pedido) {
       const pedidos = JSON.parse(localStorage.getItem('pedidos') || '[]');
@@ -52,14 +109,18 @@
       const lista = document.getElementById('listaPedidos');
       lista.innerHTML = '';
       pedidos.forEach((p, i) => {
+        const linkColeta = gerarLinkGoogleMaps(p.enderecoColeta);
+        const linkEntrega = gerarLinkGoogleMaps(p.enderecoEntrega);
         const div = document.createElement('div');
         div.className = 'pedido';
         div.innerHTML = `
           <strong>Pedido #${i + 1}</strong><br/>
           Nome: ${p.nome} <br/>
           Telefone: ${p.telefone} <br/>
-          Coleta: ${p.enderecoColeta} <br/>
-          Entrega: ${p.enderecoEntrega}
+          Coleta: <a href="${linkColeta}" target="_blank" class="maps-link">${p.enderecoColeta}</a><br/>
+          Entrega: <a href="${linkEntrega}" target="_blank" class="maps-link">${p.enderecoEntrega}</a><br/>
+          Distância aproximada: ${p.distancia.toFixed(2)} km<br/>
+          Taxa: R$ ${formatarValor(p.taxa)}
         `;
         lista.appendChild(div);
       });
@@ -67,16 +128,36 @@
 
     document.getElementById('formPedido').addEventListener('submit', e => {
       e.preventDefault();
+
+      const latColeta = parseFloat(document.getElementById('latColeta').value);
+      const lonColeta = parseFloat(document.getElementById('lonColeta').value);
+      const latEntrega = parseFloat(document.getElementById('latEntrega').value);
+      const lonEntrega = parseFloat(document.getElementById('lonEntrega').value);
+
+      if (
+        isNaN(latColeta) || isNaN(lonColeta) ||
+        isNaN(latEntrega) || isNaN(lonEntrega)
+      ) {
+        alert('Por favor, preencha todas as coordenadas corretamente.');
+        return;
+      }
+
+      const distancia = calcularDistanciaHaversine(latColeta, lonColeta, latEntrega, lonEntrega);
+      const taxa = calcularTaxa(distancia);
+
       const pedido = {
         nome: document.getElementById('nome').value,
         telefone: document.getElementById('telefone').value,
         enderecoColeta: document.getElementById('enderecoColeta').value,
         enderecoEntrega: document.getElementById('enderecoEntrega').value,
+        distancia: distancia,
+        taxa: taxa,
         status: 'pendente'
       };
       salvarPedido(pedido);
       mostrarPedidos();
       e.target.reset();
+      document.getElementById('infoTaxa').textContent = 'Taxa mínima: R$ 10,00 até 5 km';
       alert('Pedido enviado!');
     });
 
