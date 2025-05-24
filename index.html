@@ -31,11 +31,11 @@
     </label>
 
     <label>Endereço de Coleta:
-      <input type="text" id="enderecoColeta" autocomplete="off" required />
+      <textarea id="enderecoColeta" rows="2" required></textarea>
     </label>
 
     <label>Endereço de Entrega:
-      <input type="text" id="enderecoEntrega" autocomplete="off" required />
+      <textarea id="enderecoEntrega" rows="2" required></textarea>
     </label>
 
     <button type="submit">Enviar Pedido</button>
@@ -44,38 +44,13 @@
   <h2>Pedidos enviados</h2>
   <div id="listaPedidos"></div>
 
-  <!-- Google Maps Places API -->
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBXjfYWW1twh7VmxfXfyTEo84JrkF2c4_E&libraries=places"></script>
-
   <script>
-    function initAutocomplete() {
-      const options = {
-        componentRestrictions: { country: 'br' },
-        fields: ["formatted_address", "geometry", "name"],
-        strictBounds: false,
-        // Você pode adicionar 'location' e 'radius' para focar no raio de Foz do Iguaçu, mas o Google pode ignorar se o usuário sair da área
-        // Exemplo:
-        // bounds: new google.maps.LatLngBounds(
-        //   new google.maps.LatLng(-25.645, -54.644),
-        //   new google.maps.LatLng(-25.45, -54.45)
-        // )
-      };
-
-      const coletaInput = document.getElementById('enderecoColeta');
-      const entregaInput = document.getElementById('enderecoEntrega');
-
-      const autocompleteColeta = new google.maps.places.Autocomplete(coletaInput, options);
-      const autocompleteEntrega = new google.maps.places.Autocomplete(entregaInput, options);
-    }
-
-    // Função para salvar pedido no localStorage
     function salvarPedido(pedido) {
       const pedidos = JSON.parse(localStorage.getItem('pedidos') || '[]');
       pedidos.push(pedido);
       localStorage.setItem('pedidos', JSON.stringify(pedidos));
     }
 
-    // Função para mostrar pedidos
     function mostrarPedidos() {
       const pedidos = JSON.parse(localStorage.getItem('pedidos') || '[]');
       const lista = document.getElementById('listaPedidos');
@@ -111,10 +86,7 @@
       alert('Pedido enviado!');
     });
 
-    window.onload = function() {
-      initAutocomplete();
-      mostrarPedidos();
-    };
+    window.onload = mostrarPedidos;
   </script>
 
 </body>
