@@ -9,6 +9,7 @@
     input, textarea { width: 100%; padding: 8px; margin-top: 5px; }
     button { margin-top: 15px; padding: 10px 20px; }
     .pedido { border: 1px solid #ddd; padding: 10px; margin-top: 15px; }
+    .taxa { margin-top: 10px; font-weight: bold; }
   </style>
 </head>
 <body>
@@ -32,6 +33,12 @@
       <textarea id="enderecoEntrega" rows="2" required></textarea>
     </label>
 
+    <label>Distância (km):
+      <input type="number" id="distancia" min="0" step="0.1" required />
+    </label>
+
+    <div class="taxa" id="infoTaxa">Taxa mínima: R$ 10,00 até 5 km</div>
+
     <button type="submit">Enviar Pedido</button>
   </form>
 
@@ -39,6 +46,32 @@
   <div id="listaPedidos"></div>
 
   <script>
+    function calcularTaxa(distanciaKm) {
+      const taxaMinima = 10.00;
+      if(distanciaKm <= 5) {
+        return taxaMinima;
+      } else {
+        // Exemplo: R$10 + R$2 por km acima de 5
+        return taxaMinima + (distanciaKm - 5) * 2;
+      }
+    }
+
+    function formatarValor(valor) {
+      return valor.toFixed(2).replace('.', ',');
+    }
+
+    // Atualiza a info da taxa quando o usuário digita a distância
+    document.getElementById('distancia').addEventListener('input', e => {
+      const distancia = parseFloat(e.target.value);
+      const infoTaxa = document.getElementById('infoTaxa');
+      if (!isNaN(distancia) && distancia >= 0) {
+        const taxa = calcularTaxa(distancia);
+        infoTaxa.textContent = `Taxa estimada: R$ ${formatarValor(taxa)}`;
+      } else {
+        infoTaxa.textContent = 'Taxa mínima: R$ 10,00 até 5 km';
+      }
+    });
+
     // Função para salvar pedido no localStorage
     function salvarPedido(pedido) {
       const pedidos = JSON.parse(localStorage.getItem('pedidos') || '[]');
@@ -59,7 +92,9 @@
           Nome: ${p.nome} <br/>
           Telefone: ${p.telefone} <br/>
           Coleta: ${p.enderecoColeta} <br/>
-          Entrega: ${p.enderecoEntrega}
+          Entrega: ${p.enderecoEntrega} <br/>
+          Distância: ${p.distancia} km<br/>
+          Taxa: R$ ${formatarValor(p.taxa)}
         `;
         lista.appendChild(div);
       });
@@ -67,16 +102,21 @@
 
     document.getElementById('formPedido').addEventListener('submit', e => {
       e.preventDefault();
+      const distancia = parseFloat(document.getElementById('distancia').value);
+      const taxa = calcularTaxa(distancia);
       const pedido = {
         nome: document.getElementById('nome').value,
         telefone: document.getElementById('telefone').value,
         enderecoColeta: document.getElementById('enderecoColeta').value,
         enderecoEntrega: document.getElementById('enderecoEntrega').value,
+        distancia: distancia,
+        taxa: taxa,
         status: 'pendente'
       };
       salvarPedido(pedido);
       mostrarPedidos();
       e.target.reset();
+      document.getElementById('infoTaxa').textContent = 'Taxa mínima: R$ 10,00 até 5 km';
       alert('Pedido enviado!');
     });
 
