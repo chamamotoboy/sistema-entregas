@@ -59,7 +59,7 @@
       lista.innerHTML = '';
 
       if(pedidos.length === 0){
-        lista.innerHTML = '<p>Nenhum pedido encontrado.</p>';
+        lista.innerHTML = '<p>Nenhum pedido encontrado acesse aqui para Verificar se Tem entrega Pendente aceite e faça os passos .</p>';
         return;
       }
 
@@ -93,8 +93,8 @@
 
     mostrarPedidos();
 
-    // Atualiza os pedidos automaticamente a cada 15 segundos
-    setInterval(mostrarPedidos, 15000);
+    // Atualiza os pedidos automaticamente a cada 5 segundos
+    setInterval(mostrarPedidos, 5000);
   </script>
 
 </body>
