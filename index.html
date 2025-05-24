@@ -10,6 +10,13 @@
     button { margin-top: 15px; padding: 10px 20px; }
     .pedido { border: 1px solid #ddd; padding: 10px; margin-top: 15px; }
     .taxa { margin-top: 10px; font-weight: bold; }
+    a.maps-link {
+      color: #0066cc;
+      text-decoration: none;
+    }
+    a.maps-link:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
@@ -60,6 +67,12 @@
       return valor.toFixed(2).replace('.', ',');
     }
 
+    // Função para gerar URL do Google Maps para um endereço
+    function gerarLinkGoogleMaps(endereco) {
+      const baseUrl = 'https://www.google.com/maps/search/?api=1&query=';
+      return baseUrl + encodeURIComponent(endereco);
+    }
+
     // Atualiza a info da taxa quando o usuário digita a distância
     document.getElementById('distancia').addEventListener('input', e => {
       const distancia = parseFloat(e.target.value);
@@ -85,14 +98,16 @@
       const lista = document.getElementById('listaPedidos');
       lista.innerHTML = '';
       pedidos.forEach((p, i) => {
+        const linkColeta = gerarLinkGoogleMaps(p.enderecoColeta);
+        const linkEntrega = gerarLinkGoogleMaps(p.enderecoEntrega);
         const div = document.createElement('div');
         div.className = 'pedido';
         div.innerHTML = `
           <strong>Pedido #${i + 1}</strong><br/>
           Nome: ${p.nome} <br/>
           Telefone: ${p.telefone} <br/>
-          Coleta: ${p.enderecoColeta} <br/>
-          Entrega: ${p.enderecoEntrega} <br/>
+          Coleta: <a href="${linkColeta}" target="_blank" class="maps-link">${p.enderecoColeta}</a><br/>
+          Entrega: <a href="${linkEntrega}" target="_blank" class="maps-link">${p.enderecoEntrega}</a><br/>
           Distância: ${p.distancia} km<br/>
           Taxa: R$ ${formatarValor(p.taxa)}
         `;
