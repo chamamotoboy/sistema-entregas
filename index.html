@@ -1,86 +1,48 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <title>Solicitar Entrega - Sistema Simples</title>
+  <meta charset="UTF-8">
+  <title>Painel do Administrador</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; max-width: 600px; }
-    label { display: block; margin-top: 15px; }
-    input, textarea { width: 100%; padding: 8px; margin-top: 5px; }
-    button { margin-top: 15px; padding: 10px 20px; }
-    .pedido { border: 1px solid #ddd; padding: 10px; margin-top: 15px; }
+    body { font-family: Arial, sans-serif; margin: 20px; max-width: 700px; }
+    .pedidoAdmin { border: 1px solid #ccc; padding: 10px; margin-bottom: 15px; }
   </style>
 </head>
 <body>
 
-  <h1>Solicitar Entrega</h1>
-
-  <form id="formPedido">
-    <label>Nome do Cliente:
-      <input type="text" id="nome" required />
-    </label>
-
-    <label>Telefone:
-      <input type="tel" id="telefone" required />
-    </label>
-
-    <label>Endereço de Coleta:
-      <textarea id="enderecoColeta" rows="2" required></textarea>
-    </label>
-
-    <label>Endereço de Entrega:
-      <textarea id="enderecoEntrega" rows="2" required></textarea>
-    </label>
-
-    <button type="submit">Enviar Pedido</button>
-  </form>
-
-  <h2>Pedidos enviados</h2>
-  <div id="listaPedidos"></div>
+  <h1>Painel do Administrador</h1>
+  <div id="listaPedidosAdmin"></div>
 
   <script>
-    // Função para salvar pedido no localStorage
-    function salvarPedido(pedido) {
+    function mostrarPedidosAdmin() {
       const pedidos = JSON.parse(localStorage.getItem('pedidos') || '[]');
-      pedidos.push(pedido);
-      localStorage.setItem('pedidos', JSON.stringify(pedidos));
-    }
-
-    // Função para carregar e mostrar pedidos
-    function mostrarPedidos() {
-      const pedidos = JSON.parse(localStorage.getItem('pedidos') || '[]');
-      const lista = document.getElementById('listaPedidos');
+      const lista = document.getElementById('listaPedidosAdmin');
       lista.innerHTML = '';
+
+      if (pedidos.length === 0) {
+        lista.innerHTML = '<p>Nenhum pedido encontrado.</p>';
+        return;
+      }
+
       pedidos.forEach((p, i) => {
+        const motoboy = p.motoboy ? p.motoboy : 'Não atribuído';
         const div = document.createElement('div');
-        div.className = 'pedido';
+        div.className = 'pedidoAdmin';
         div.innerHTML = `
           <strong>Pedido #${i + 1}</strong><br/>
-          Nome: ${p.nome} <br/>
+          Cliente: ${p.nome} <br/>
           Telefone: ${p.telefone} <br/>
           Coleta: ${p.enderecoColeta} <br/>
-          Entrega: ${p.enderecoEntrega}
+          Entrega: ${p.enderecoEntrega} <br/>
+          Status: ${p.status} <br/>
+          Motoboy: <strong>${motoboy}</strong><br/>
         `;
         lista.appendChild(div);
       });
     }
 
-    document.getElementById('formPedido').addEventListener('submit', e => {
-      e.preventDefault();
-      const pedido = {
-        nome: document.getElementById('nome').value,
-        telefone: document.getElementById('telefone').value,
-        enderecoColeta: document.getElementById('enderecoColeta').value,
-        enderecoEntrega: document.getElementById('enderecoEntrega').value,
-        status: 'pendente'
-      };
-      salvarPedido(pedido);
-      mostrarPedidos();
-      e.target.reset();
-      alert('Pedido enviado!');
-    });
-
-    mostrarPedidos();
+    mostrarPedidosAdmin();
+    setInterval(mostrarPedidosAdmin, 5000);
   </script>
 
 </body>
