@@ -33,6 +33,10 @@
       <textarea id="enderecoEntrega" rows="2" required></textarea>
     </label>
 
+    <label>Observações:
+      <textarea id="observacoes" rows="2"></textarea>
+    </label>
+
     <button type="submit">Enviar Pedido</button>
   </form>
 
@@ -43,14 +47,12 @@
   <div id="statusPedido">Carregando status...</div>
 
   <script>
-    // Salvar pedido no localStorage
     function salvarPedido(pedido) {
       const pedidos = JSON.parse(localStorage.getItem('pedidos') || '[]');
       pedidos.push(pedido);
       localStorage.setItem('pedidos', JSON.stringify(pedidos));
     }
 
-    // Mostrar lista de pedidos
     function mostrarPedidos() {
       const pedidos = JSON.parse(localStorage.getItem('pedidos') || '[]');
       const lista = document.getElementById('listaPedidos');
@@ -64,6 +66,8 @@
           Telefone: ${p.telefone} <br/>
           Coleta: ${p.enderecoColeta} <br/>
           Entrega: ${p.enderecoEntrega} <br/>
+          Observações: ${p.observacoes || '---'} <br/>
+          Data/Hora: ${p.dataHora} <br/>
           Status: ${p.status}
           <br/><button onclick="atualizarStatus('${p.id}')">Marcar como Entregue</button>
         `;
@@ -71,7 +75,6 @@
       });
     }
 
-    // Atualiza status do pedido para 'entregue'
     function atualizarStatus(id) {
       let pedidos = JSON.parse(localStorage.getItem('pedidos') || '[]');
       pedidos = pedidos.map(p => {
@@ -82,7 +85,6 @@
       mostrarPedidos();
     }
 
-    // Atualizar status do pedido EXPRESS 0001 na tela
     function atualizarStatusPedido() {
       const pedidos = JSON.parse(localStorage.getItem('pedidos') || '[]');
       const pedido = pedidos.find(p => p.id === "EXPRESS 0001");
@@ -94,13 +96,12 @@
       }
     }
 
-    // Formulário enviado
     document.getElementById('formPedido').addEventListener('submit', e => {
       e.preventDefault();
-      // Cria ID EXPRESS com contador incremental
       const pedidos = JSON.parse(localStorage.getItem('pedidos') || '[]');
       const novoNumero = pedidos.length + 1;
       const id = 'EXPRESS ' + novoNumero.toString().padStart(4, '0');
+      const dataHora = new Date().toLocaleString('pt-BR');
 
       const pedido = {
         id: id,
@@ -108,18 +109,20 @@
         telefone: document.getElementById('telefone').value,
         enderecoColeta: document.getElementById('enderecoColeta').value,
         enderecoEntrega: document.getElementById('enderecoEntrega').value,
+        observacoes: document.getElementById('observacoes').value,
+        dataHora: dataHora,
         status: 'pendente'
       };
+
       salvarPedido(pedido);
       mostrarPedidos();
+      atualizarStatusPedido();
       e.target.reset();
       alert(`Pedido ${id} enviado!`);
     });
 
-    // Inicializar
     mostrarPedidos();
     atualizarStatusPedido();
-    // Atualizar status a cada 5 segundos
     setInterval(atualizarStatusPedido, 5000);
   </script>
 
