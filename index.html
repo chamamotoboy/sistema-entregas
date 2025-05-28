@@ -9,12 +9,17 @@
     input, textarea { width: 100%; padding: 8px; margin-top: 5px; }
     button { margin-top: 15px; padding: 10px 20px; }
     .pedido { border: 1px solid #ddd; padding: 10px; margin-top: 15px; }
-    #statusPedido { margin-top: 20px; font-weight: bold; color: #007700; }
+    .info { background: #f0f0f0; padding: 10px; margin-bottom: 20px; }
+    .maps-link { margin-top: 5px; display: inline-block; }
   </style>
 </head>
 <body>
 
   <h1>Solicitar Entrega</h1>
+
+  <div class="info">
+    <strong>Taxa mínima:</strong> R$ 10,00 até 5 km
+  </div>
 
   <form id="formPedido">
     <label>Nome do Cliente:
@@ -26,11 +31,11 @@
     </label>
 
     <label>Endereço de Coleta:
-      <textarea id="enderecoColeta" rows="2" required></textarea>
+      <input type="text" id="enderecoColeta" required />
     </label>
 
     <label>Endereço de Entrega:
-      <textarea id="enderecoEntrega" rows="2" required></textarea>
+      <input type="text" id="enderecoEntrega" required />
     </label>
 
     <label>Observações:
@@ -42,9 +47,6 @@
 
   <h2>Pedidos enviados</h2>
   <div id="listaPedidos"></div>
-
-  <h2>Status do pedido EXPRESS 0001</h2>
-  <div id="statusPedido">Carregando status...</div>
 
   <script>
     function salvarPedido(pedido) {
@@ -58,53 +60,27 @@
       const lista = document.getElementById('listaPedidos');
       lista.innerHTML = '';
       pedidos.forEach((p, i) => {
+        const linkRota = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(p.enderecoColeta)}&destination=${encodeURIComponent(p.enderecoEntrega)}`;
         const div = document.createElement('div');
         div.className = 'pedido';
         div.innerHTML = `
-          <strong>Pedido #${i + 1} (${p.id})</strong><br/>
+          <strong>Pedido #${i + 1}</strong><br/>
           Nome: ${p.nome} <br/>
           Telefone: ${p.telefone} <br/>
           Coleta: ${p.enderecoColeta} <br/>
           Entrega: ${p.enderecoEntrega} <br/>
           Observações: ${p.observacoes || '---'} <br/>
-          Data/Hora: ${p.dataHora} <br/>
-          Status: ${p.status}
-          <br/><button onclick="atualizarStatus('${p.id}')">Marcar como Entregue</button>
+          Data/Hora do Pedido: ${p.dataHora} <br/>
+          <a href="${linkRota}" target="_blank" class="maps-link">Ver rota no Google Maps</a>
         `;
         lista.appendChild(div);
       });
     }
 
-    function atualizarStatus(id) {
-      let pedidos = JSON.parse(localStorage.getItem('pedidos') || '[]');
-      pedidos = pedidos.map(p => {
-        if(p.id === id) p.status = 'entregue';
-        return p;
-      });
-      localStorage.setItem('pedidos', JSON.stringify(pedidos));
-      mostrarPedidos();
-    }
-
-    function atualizarStatusPedido() {
-      const pedidos = JSON.parse(localStorage.getItem('pedidos') || '[]');
-      const pedido = pedidos.find(p => p.id === "EXPRESS 0001");
-      const statusDiv = document.getElementById('statusPedido');
-      if (pedido) {
-        statusDiv.textContent = `Status atual: ${pedido.status}`;
-      } else {
-        statusDiv.textContent = 'Pedido EXPRESS 0001 não encontrado.';
-      }
-    }
-
     document.getElementById('formPedido').addEventListener('submit', e => {
       e.preventDefault();
-      const pedidos = JSON.parse(localStorage.getItem('pedidos') || '[]');
-      const novoNumero = pedidos.length + 1;
-      const id = 'EXPRESS ' + novoNumero.toString().padStart(4, '0');
       const dataHora = new Date().toLocaleString('pt-BR');
-
       const pedido = {
-        id: id,
         nome: document.getElementById('nome').value,
         telefone: document.getElementById('telefone').value,
         enderecoColeta: document.getElementById('enderecoColeta').value,
@@ -113,18 +89,32 @@
         dataHora: dataHora,
         status: 'pendente'
       };
-
       salvarPedido(pedido);
       mostrarPedidos();
-      atualizarStatusPedido();
       e.target.reset();
-      alert(`Pedido ${id} enviado!`);
+      alert('Pedido enviado!');
     });
 
     mostrarPedidos();
-    atualizarStatusPedido();
-    setInterval(atualizarStatusPedido, 5000);
   </script>
+
+  <!-- GOOGLE PLACES AUTOCOMPLETE -->
+  <script>
+    function initAutocomplete() {
+      const options = {
+        componentRestrictions: { country: 'br' },
+        fields: ['formatted_address'],
+        types: ['address']
+      };
+
+      const coletaInput = document.getElementById('enderecoColeta');
+      const entregaInput = document.getElementById('enderecoEntrega');
+
+      const coletaAutocomplete = new google.maps.places.Autocomplete(coletaInput, options);
+      const entregaAutocomplete = new google.maps.places.Autocomplete(entregaInput, options);
+    }
+  </script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBXjfYWW1twh7VmxfXfyTEo84JrkF2c4_E&libraries=places&callback=initAutocomplete" async defer></script>
 
 </body>
 </html>
