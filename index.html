@@ -7,10 +7,11 @@
     body { font-family: Arial, sans-serif; margin: 20px; max-width: 600px; }
     label { display: block; margin-top: 15px; }
     input, textarea { width: 100%; padding: 8px; margin-top: 5px; }
-    button { margin-top: 15px; padding: 10px 20px; }
+    button { margin-top: 15px; padding: 10px 20px; cursor: pointer; }
     .pedido { border: 1px solid #ddd; padding: 10px; margin-top: 15px; }
     .info { background: #f0f0f0; padding: 10px; margin-bottom: 20px; }
     .maps-link { margin-top: 5px; display: inline-block; }
+    #statusConsulta { margin-top: 15px; font-weight: bold; color: #007700; }
   </style>
 </head>
 <body>
@@ -38,23 +39,27 @@
       <input type="text" id="enderecoEntrega" required />
     </label>
 
-    <label>Observações:
-      <textarea id="observacoes" rows="2"></textarea>
-    </label>
-
     <button type="submit">Enviar Pedido</button>
   </form>
 
   <h2>Pedidos enviados</h2>
   <div id="listaPedidos"></div>
 
+  <h2>Consultar status do pedido</h2>
+  <label for="inputConsultaId">Digite o ID do pedido (ex: EXPRESS 0001):</label>
+  <input type="text" id="inputConsultaId" placeholder="EXPRESS 0001" />
+  <button id="btnConsultarStatus">Consultar</button>
+  <div id="statusConsulta">Informe um ID e clique em Consultar.</div>
+
   <script>
+    // Salvar pedido no localStorage
     function salvarPedido(pedido) {
       const pedidos = JSON.parse(localStorage.getItem('pedidos') || '[]');
       pedidos.push(pedido);
       localStorage.setItem('pedidos', JSON.stringify(pedidos));
     }
 
+    // Mostrar lista de pedidos
     function mostrarPedidos() {
       const pedidos = JSON.parse(localStorage.getItem('pedidos') || '[]');
       const lista = document.getElementById('listaPedidos');
@@ -64,37 +69,80 @@
         const div = document.createElement('div');
         div.className = 'pedido';
         div.innerHTML = `
-          <strong>Pedido #${i + 1}</strong><br/>
+          <strong>Pedido #${i + 1} (${p.id})</strong><br/>
           Nome: ${p.nome} <br/>
           Telefone: ${p.telefone} <br/>
           Coleta: ${p.enderecoColeta} <br/>
           Entrega: ${p.enderecoEntrega} <br/>
-          Observações: ${p.observacoes || '---'} <br/>
-          Data/Hora do Pedido: ${p.dataHora} <br/>
-          <a href="${linkRota}" target="_blank" class="maps-link">Ver rota no Google Maps</a>
+          Status: ${p.status}<br/>
+          <a href="${linkRota}" target="_blank" class="maps-link">Ver rota no Google Maps</a><br/>
+          <button onclick="atualizarStatus('${p.id}')">Marcar como Entregue</button>
         `;
         lista.appendChild(div);
       });
     }
 
+    // Atualiza status do pedido para 'entregue'
+    function atualizarStatus(id) {
+      let pedidos = JSON.parse(localStorage.getItem('pedidos') || '[]');
+      pedidos = pedidos.map(p => {
+        if(p.id === id) p.status = 'entregue';
+        return p;
+      });
+      localStorage.setItem('pedidos', JSON.stringify(pedidos));
+      mostrarPedidos();
+    }
+
+    // Consultar status de pedido pelo ID e mostrar na área de consulta
+    function consultarStatus() {
+      const idConsulta = document.getElementById('inputConsultaId').value.trim();
+      const statusDiv = document.getElementById('statusConsulta');
+      if (!idConsulta) {
+        statusDiv.textContent = 'Por favor, informe o ID do pedido.';
+        return;
+      }
+      const pedidos = JSON.parse(localStorage.getItem('pedidos') || '[]');
+      const pedido = pedidos.find(p => p.id.toUpperCase() === idConsulta.toUpperCase());
+      if (pedido) {
+        statusDiv.textContent = `Status do pedido ${pedido.id}: ${pedido.status}`;
+      } else {
+        statusDiv.textContent = `Pedido ${idConsulta} não encontrado.`;
+      }
+    }
+
+    // Atualização automática do status na consulta a cada 5 segundos, se tiver algum ID informado
+    setInterval(() => {
+      const idConsulta = document.getElementById('inputConsultaId').value.trim();
+      if (idConsulta) {
+        consultarStatus();
+      }
+    }, 5000);
+
+    // Evento do botão Consultar
+    document.getElementById('btnConsultarStatus').addEventListener('click', consultarStatus);
+
+    // Envio do formulário
     document.getElementById('formPedido').addEventListener('submit', e => {
       e.preventDefault();
-      const dataHora = new Date().toLocaleString('pt-BR');
+      const pedidos = JSON.parse(localStorage.getItem('pedidos') || '[]');
+      const novoNumero = pedidos.length + 1;
+      const id = 'EXPRESS ' + novoNumero.toString().padStart(4, '0');
+
       const pedido = {
+        id: id,
         nome: document.getElementById('nome').value,
         telefone: document.getElementById('telefone').value,
         enderecoColeta: document.getElementById('enderecoColeta').value,
         enderecoEntrega: document.getElementById('enderecoEntrega').value,
-        observacoes: document.getElementById('observacoes').value,
-        dataHora: dataHora,
         status: 'pendente'
       };
       salvarPedido(pedido);
       mostrarPedidos();
       e.target.reset();
-      alert('Pedido enviado!');
+      alert(`Pedido ${id} enviado!`);
     });
 
+    // Inicializa lista na tela
     mostrarPedidos();
   </script>
 
@@ -106,12 +154,10 @@
         fields: ['formatted_address'],
         types: ['address']
       };
-
       const coletaInput = document.getElementById('enderecoColeta');
       const entregaInput = document.getElementById('enderecoEntrega');
-
-      const coletaAutocomplete = new google.maps.places.Autocomplete(coletaInput, options);
-      const entregaAutocomplete = new google.maps.places.Autocomplete(entregaInput, options);
+      new google.maps.places.Autocomplete(coletaInput, options);
+      new google.maps.places.Autocomplete(entregaInput, options);
     }
   </script>
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBXjfYWW1twh7VmxfXfyTEo84JrkF2c4_E&libraries=places&callback=initAutocomplete" async defer></script>
