@@ -1,95 +1,443 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <title>Painel do Motoboy</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 20px; max-width: 700px; }
-    .pedido { border: 1px solid #ccc; padding: 10px; margin-bottom: 15px; }
-    button { margin-top: 10px; padding: 6px 12px; }
-    select { margin-top: 8px; }
-    a.maps-link {
-      display: inline-block;
-      margin-top: 6px;
-      margin-right: 10px;
-      color: #3498db;
-      text-decoration: none;
-      font-weight: bold;
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Painel do Motoboy - Express Foz</title>
+<style>
+  /* Reset básico */
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0; padding: 0;
+    background: #f0f4f8;
+    color: #333;
+  }
+  .container {
+    max-width: 900px;
+    margin: 20px auto;
+    background: #fff;
+    padding: 25px 30px;
+    border-radius: 10px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+  }
+  h1 {
+    margin-bottom: 15px;
+    color: #2c3e50;
+    text-align: center;
+  }
+  h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: #34495e;
+  }
+  label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+  }
+  input[type="text"], input[type="tel"], input[type="number"], select {
+    width: 100%;
+    padding: 8px 12px;
+    margin-bottom: 15px;
+    border: 1.8px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+  }
+  input[type="text"]:focus, input[type="tel"]:focus, input[type="number"]:focus, select:focus {
+    border-color: #2980b9;
+    outline: none;
+  }
+  button {
+    background: #2980b9;
+    border: none;
+    color: #fff;
+    font-weight: 700;
+    padding: 10px 18px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-right: 10px;
+    transition: background 0.3s ease;
+  }
+  button:hover {
+    background: #1c5980;
+  }
+  #logoutBtn {
+    background: #e74c3c;
+  }
+  #logoutBtn:hover {
+    background: #c0392b;
+  }
+  #listaPedidosContainer {
+    margin-top: 30px;
+  }
+  .pedido {
+    background: #ecf0f1;
+    padding: 15px 20px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  }
+  .pedido strong {
+    color: #2c3e50;
+  }
+  .timestamp {
+    font-size: 0.85rem;
+    color: #7f8c8d;
+  }
+  .maps-link {
+    text-decoration: none;
+    color: #2980b9;
+    font-weight: 600;
+  }
+  .maps-link:hover {
+    text-decoration: underline;
+  }
+  .notificacao {
+    background: #27ae60;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    font-weight: 600;
+    display: none;
+    text-align: center;
+  }
+  /* Dashboard simples */
+  #dashboard {
+    background: #3498db;
+    color: white;
+    padding: 15px 20px;
+    border-radius: 10px;
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+  }
+  .dash-box {
+    flex: 1 1 120px;
+    text-align: center;
+  }
+  .dash-box strong {
+    display: block;
+    font-size: 1.8rem;
+  }
+  .dash-box span {
+    font-size: 0.9rem;
+    opacity: 0.85;
+  }
+  /* Responsividade */
+  @media(max-width: 600px) {
+    .container {
+      padding: 15px 20px;
     }
-    a.maps-link:hover { text-decoration: underline; }
-  </style>
+    #dashboard {
+      flex-direction: column;
+      gap: 10px;
+    }
+  }
+</style>
 </head>
 <body>
-  <h1>Painel do Motoboy</h1>
-  <p>Aqui é onde você, motoboy, pode aceitar os pedidos disponíveis.</p>
-  <p><strong>Regras de cobrança:</strong> até 4 km: R$ 8,00. Acima de 5 km: R$ 2,00 por km (use o Google Maps para calcular).</p>
-  <p>Siga as etapas: <strong>Aceitei</strong> → <strong>Estou a caminho</strong> → <strong>Entreguei</strong>.</p>
-  <p><strong>Aviso:</strong> Não passe seu contato diretamente para os clientes. O sistema é coletivo. Seja honesto e ético.</p>
-  <hr/>
-  <div id="listaPedidos"></div>
 
-  <script>
-    function carregarPedidos() {
-      return JSON.parse(localStorage.getItem('pedidos') || '[]');
+<div class="container">
+  <h1>Painel do Motoboy - Express Foz</h1>
+
+  <div id="notificacao" class="notificacao"></div>
+
+  <div id="dadosMotoboy">
+    <h3>Seus dados</h3>
+    <label for="nomeMotoboy">Nome:</label>
+    <input type="text" id="nomeMotoboy" placeholder="Digite seu nome" />
+    <label for="telefoneMotoboy">Telefone:</label>
+    <input type="tel" id="telefoneMotoboy" placeholder="Digite seu telefone" />
+    <button id="salvarDadosBtn">Salvar Dados</button>
+    <button id="logoutBtn" style="display:none;">Sair</button>
+  </div>
+
+  <div id="dashboard" style="display:none;">
+    <div class="dash-box">
+      <strong id="totalPedidos">0</strong>
+      <span>Total de Pedidos</span>
+    </div>
+    <div class="dash-box">
+      <strong id="pedidosPendentes">0</strong>
+      <span>Pendentes</span>
+    </div>
+    <div class="dash-box">
+      <strong id="pedidosACaminho">0</strong>
+      <span>A caminho</span>
+    </div>
+    <div class="dash-box">
+      <strong id="pedidosEntregues">0</strong>
+      <span>Entregues</span>
+    </div>
+    <div class="dash-box">
+      <strong id="totalTaxa">R$ 0,00</strong>
+      <span>Taxa Acumulada</span>
+    </div>
+  </div>
+
+  <div id="listaPedidosContainer" style="display:none;">
+    <h3>Seus pedidos</h3>
+    <div id="listaPedidos"></div>
+    <button id="exportarCSVBtn" style="margin-top:15px; background:#27ae60;">Exportar Relatório CSV</button>
+  </div>
+</div>
+
+<script>
+  // Funções motoboy
+  function salvarDadosMotoboy() {
+    const nome = document.getElementById('nomeMotoboy').value.trim();
+    const telefone = document.getElementById('telefoneMotoboy').value.trim();
+    if (!nome || !telefone) {
+      alert('Preencha nome e telefone.');
+      return;
     }
+    localStorage.setItem('motoboyNome', nome);
+    localStorage.setItem('motoboyTelefone', telefone);
+    atualizarInterface();
+    mostrarPedidos();
+    mostrarNotificacao('Dados salvos com sucesso!');
+  }
+  function limparDadosMotoboy() {
+    localStorage.removeItem('motoboyNome');
+    localStorage.removeItem('motoboyTelefone');
+    atualizarInterface();
+    document.getElementById('listaPedidos').innerHTML = '';
+    esconderNotificacao();
+  }
+  function atualizarInterface() {
+    const nome = localStorage.getItem('motoboyNome');
+    const tel = localStorage.getItem('motoboyTelefone');
+    const dadosDiv = document.getElementById('dadosMotoboy');
+    const listaContainer = document.getElementById('listaPedidosContainer');
+    const dashboard = document.getElementById('dashboard');
 
-    function salvarPedidos(pedidos) {
-      localStorage.setItem('pedidos', JSON.stringify(pedidos));
+    if (nome && tel) {
+      document.getElementById('nomeMotoboy').value = nome;
+      document.getElementById('telefoneMotoboy').value = tel;
+      document.getElementById('nomeMotoboy').disabled = true;
+      document.getElementById('telefoneMotoboy').disabled = true;
+      document.getElementById('salvarDadosBtn').style.display = 'none';
+      document.getElementById('logoutBtn').style.display = 'inline-block';
+      listaContainer.style.display = 'block';
+      dashboard.style.display = 'flex';
+    } else {
+      document.getElementById('nomeMotoboy').value = '';
+      document.getElementById('telefoneMotoboy').value = '';
+      document.getElementById('nomeMotoboy').disabled = false;
+      document.getElementById('telefoneMotoboy').disabled = false;
+      document.getElementById('salvarDadosBtn').style.display = 'inline-block';
+      document.getElementById('logoutBtn').style.display = 'none';
+      listaContainer.style.display = 'none';
+      dashboard.style.display = 'none';
     }
+  }
 
-    function atualizarStatus(index, novoStatus) {
-      const pedidos = carregarPedidos();
-      pedidos[index].status = novoStatus;
-      salvarPedidos(pedidos);
-      mostrarPedidos();
-    }
+  // Pedidos
+  function carregarPedidos() {
+    return JSON.parse(localStorage.getItem('pedidos') || '[]');
+  }
+  function salvarPedidos(p) {
+    localStorage.setItem('pedidos', JSON.stringify(p));
+  }
+  function calcularTaxa(km) {
+    km = Number(km);
+    if (isNaN(km) || km <= 0) return 0;
+    if (km <= 5) return 10;
+    return 10 + (km - 5) * 2;
+  }
 
-    function criarLinkMapa(endereco, texto) {
-      const url = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(endereco);
-      return `<a href="${url}" target="_blank" class="maps-link">${texto}</a>`;
-    }
+  // Mostrar lista e dashboard
+  function mostrarPedidos() {
+    const pedidos = carregarPedidos();
+    if (!localStorage.getItem('motoboyNome')) return;
+    const meuNome = localStorage.getItem('motoboyNome');
+    const meuTel = localStorage.getItem('motoboyTelefone');
+    const lista = document.getElementById('listaPedidos');
+    lista.innerHTML = '';
 
-    function mostrarPedidos() {
-      const pedidos = carregarPedidos();
-      const lista = document.getElementById('listaPedidos');
-      lista.innerHTML = '';
+    let totalPedidos = 0;
+    let pendentes = 0;
+    let aCaminho = 0;
+    let entregues = 0;
+    let taxaTotal = 0;
 
-      if(pedidos.length === 0){
-        lista.innerHTML = '<p>Nenhum pedido encontrado.</p>';
-        return;
+    pedidos.forEach((p, i) => {
+      if (p.motoboyNome === meuNome && p.motoboyTelefone === meuTel) {
+        totalPedidos++;
+        if (p.status === 'Aguardando motoboy') pendentes++;
+        else if (p.status === 'A caminho da coleta' || p.status === 'a caminho') aCaminho++;
+        else if (p.status === 'entregue' || p.status === 'Entregue') entregues++;
+
+        if (p.taxa) taxaTotal += parseFloat(p.taxa);
       }
+    });
 
-      pedidos.forEach((p, i) => {
-        const div = document.createElement('div');
-        div.className = 'pedido';
+    document.getElementById('totalPedidos').textContent = totalPedidos;
+    document.getElementById('pedidosPendentes').textContent = pendentes;
+    document.getElementById('pedidosACaminho').textContent = aCaminho;
+    document.getElementById('pedidosEntregues').textContent = entregues;
+    document.getElementById('totalTaxa').textContent = `R$ ${taxaTotal.toFixed(2).replace('.', ',')}`;
 
-        const linkColeta = criarLinkMapa(p.enderecoColeta, 'Ver Coleta no Maps');
-        const linkEntrega = criarLinkMapa(p.enderecoEntrega, 'Ver Entrega no Maps');
+    pedidos.forEach((p, i) => {
+      const div = document.createElement('div');
+      div.className = 'pedido';
 
+      // Mostrar apenas pedidos que já foram aceitos ou aguardando aceitação geral
+      if (!p.motoboyNome && p.status === 'Aguardando motoboy') {
         div.innerHTML = `
           <strong>Pedido #${i + 1}</strong><br/>
-          Nome: ${p.nome} <br/>
-          Telefone: ${p.telefone} <br/>
-          Coleta: ${p.enderecoColeta} <br/>
-          ${linkColeta} <br/>
-          Entrega: ${p.enderecoEntrega} <br/>
-          ${linkEntrega} <br/>
-          Status: <strong>${p.status}</strong><br/>
-          <label>Atualizar status:
-            <select onchange="atualizarStatus(${i}, this.value)">
-              <option value="pendente" ${p.status === 'pendente' ? 'selected' : ''}>Pendente</option>
-              <option value="a caminho" ${p.status === 'a caminho' ? 'selected' : ''}>A caminho</option>
-              <option value="entregue" ${p.status === 'entregue' ? 'selected' : ''}>Entregue</option>
-            </select>
-          </label>
+          Coleta: ${p.enderecoColeta}<br/>
+          Entrega: ${p.enderecoEntrega}<br/>
+          <button onclick='aceitar(${i})'>Aceitar Entrega</button>
         `;
-        lista.appendChild(div);
-      });
-    }
+      }
+      else if (p.motoboyNome === meuNome && p.motoboyTelefone === meuTel) {
+        const btnStatus = criarBotaoStatus(p, i);
+        div.innerHTML = `
+          <strong>Pedido #${i + 1}</strong> <span class="timestamp">${p.dataHora}</span><br/>
+          Cliente: ${p.nomeCliente}<br/>
+          Coleta: ${linkMaps(p.enderecoColeta)}<br/>
+          Entrega: ${linkMaps(p.enderecoEntrega)}<br/>
+          Telefone cliente: <a href="tel:${p.telefoneCliente}">${p.telefoneCliente}</a><br/>
+          Status: <strong>${p.status}</strong><br/>
+          Taxa: R$ ${parseFloat(p.taxa).toFixed(2).replace('.', ',')}<br/>
+          ${btnStatus.outerHTML}
+          <button onclick='abrirWhatsApp("${p.telefoneCliente}", "${p.nomeCliente}", ${i})' style="background:#25d366; margin-top:6px;">Abrir WhatsApp</button>
+        `;
+      } else {
+        // Outros pedidos - não mostrar
+        return;
+      }
+      lista.appendChild(div);
+    });
+  }
 
+  function linkMaps(endereco) {
+    const url = 'https://www.google.com/maps/search/' + encodeURIComponent(endereco);
+    return `<a href="${url}" target="_blank" class="maps-link">${endereco}</a>`;
+  }
+
+  function criarBotaoStatus(pedido, indice) {
+    const btn = document.createElement('button');
+    if (pedido.status === 'Aguardando motoboy') {
+      btn.textContent = 'Aceitar Entrega';
+      btn.onclick = () => aceitar(indice);
+      btn.style.background = '#2980b9';
+    }
+    else if (pedido.status === 'Aceito') {
+      btn.textContent = 'Ir para coleta';
+      btn.onclick = () => atualizarStatus(indice, 'A caminho da coleta');
+      btn.style.background = '#f39c12';
+    }
+    else if (pedido.status === 'A caminho da coleta') {
+      btn.textContent = 'Entrega realizada';
+      btn.onclick = () => atualizarStatus(indice, 'Entregue');
+      btn.style.background = '#27ae60';
+    }
+    else {
+      btn.style.display = 'none';
+    }
+    return btn;
+  }
+
+  function aceitar(indice) {
+    const pedidos = carregarPedidos();
+    const nome = localStorage.getItem('motoboyNome');
+    const tel = localStorage.getItem('motoboyTelefone');
+    if (!nome || !tel) {
+      alert('Você precisa salvar seus dados antes.');
+      return;
+    }
+    if (pedidos[indice].status !== 'Aguardando motoboy') {
+      alert('Pedido já foi aceito por outro motoboy.');
+      mostrarPedidos();
+      return;
+    }
+    pedidos[indice].motoboyNome = nome;
+    pedidos[indice].motoboyTelefone = tel;
+    pedidos[indice].status = 'Aceito';
+    salvarPedidos(pedidos);
     mostrarPedidos();
-    setInterval(mostrarPedidos, 15000);
-  </script>
+    mostrarNotificacao('Pedido aceito! Boa entrega.');
+  }
+  function atualizarStatus(indice, novoStatus) {
+    const pedidos = carregarPedidos();
+    pedidos[indice].status = novoStatus;
+    salvarPedidos(pedidos);
+    mostrarPedidos();
+    mostrarNotificacao(`Status atualizado para: ${novoStatus}`);
+  }
+
+  function abrirWhatsApp(telefone, cliente, indice) {
+    // Mensagem padrão com nome do cliente e status
+    const pedidos = carregarPedidos();
+    const pedido = pedidos[indice];
+    let mensagem = `Olá, ${cliente}! Seu pedido está com status: ${pedido.status}.`;
+    mensagem += `\nMotoboy: ${pedido.motoboyNome}`;
+    mensagem += `\nColeta: ${pedido.enderecoColeta}`;
+    mensagem += `\nEntrega: ${pedido.enderecoEntrega}`;
+    const url = `https://api.whatsapp.com/send?phone=${telefone}&text=${encodeURIComponent(mensagem)}`;
+    window.open(url, '_blank');
+  }
+
+  // Exportar CSV simples
+  function exportarCSV() {
+    const pedidos = carregarPedidos();
+    const nome = localStorage.getItem('motoboyNome');
+    const tel = localStorage.getItem('motoboyTelefone');
+    if (!nome || !tel) {
+      alert('Salve seus dados antes de exportar.');
+      return;
+    }
+    const meusPedidos = pedidos.filter(p => p.motoboyNome === nome && p.motoboyTelefone === tel);
+    if (meusPedidos.length === 0) {
+      alert('Nenhum pedido para exportar.');
+      return;
+    }
+    let csv = `ID;Cliente;Telefone Cliente;Endereço Coleta;Endereço Entrega;Status;Taxa (R$);Data e Hora\n`;
+    meusPedidos.forEach((p, i) => {
+      csv += `${i+1};${p.nomeCliente};${p.telefoneCliente};${p.enderecoColeta};${p.enderecoEntrega};${p.status};${p.taxa};${p.dataHora}\n`;
+    });
+    const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'relatorio_pedidos_motoboy.csv';
+    link.click();
+  }
+
+  // Notificações
+  function mostrarNotificacao(msg) {
+    const noti = document.getElementById('notificacao');
+    noti.textContent = msg;
+    noti.style.display = 'block';
+    setTimeout(() => {
+      noti.style.display = 'none';
+    }, 4000);
+  }
+  function esconderNotificacao() {
+    const noti = document.getElementById('notificacao');
+    noti.style.display = 'none';
+  }
+
+  // Eventos
+  document.getElementById('salvarDadosBtn').addEventListener('click', salvarDadosMotoboy);
+  document.getElementById('logoutBtn').addEventListener('click', () => {
+    if(confirm('Deseja realmente sair? Seus dados serão apagados.')) {
+      limparDadosMotoboy();
+    }
+  });
+  document.getElementById('exportarCSVBtn').addEventListener('click', exportarCSV);
+
+  // Ao carregar
+  atualizarInterface();
+  mostrarPedidos();
+
+</script>
 </body>
 </html>
