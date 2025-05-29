@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -16,34 +17,27 @@
       text-decoration: none;
       font-weight: bold;
     }
-    a.maps-link:hover {
-      text-decoration: underline;
-    }
+    a.maps-link:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
-
   <h1>Painel do Motoboy</h1>
-  <h1>Aqui é, onde você motoboy pode aceitar os pedidos que aqui Estão Disponiveis</h1>
-<h1>Sempre que aceitar lembre-se a taxa Minima até 4 km e R$ 8,00 Cobre acima de 5km R$ 2,00 por Km</h1>
-  <h1>SIGA AS ETAPAS ACEITEI E ESTOU A CAMINHO </h1>
-<h1>Eu ja Realizei a Entregua</h1>
-  <h1>A e não seja anti etico de querer deixar seu contato para clientes Vindo do Sistema Da Express Foz ok seja honesto sistema e pra todos que esteja atento aqui a receber rotas e cobrar seu frete conforme nossa tabela. voc~e cota esse preço abringo o google maps nao cobre a mais e nao queira cobrar alem pois se não vc mesmo se queima-rá pois somente aquele cliente que sabe nossa tabela ira chamar ok!!</h1>
-<h1>Se você tiver alguma duvida mande mensagem para o Dono do Sistema tire duvida não cometa erros sem perguntar, bora entregar sem pagar poto e taxas a taxa e sua vç cobra e recebe quem aceitar aceitou e ponto Final.</h1>
+  <p>Aqui é onde você, motoboy, pode aceitar os pedidos disponíveis.</p>
+  <p><strong>Regras de cobrança:</strong> até 4 km: R$ 8,00. Acima de 5 km: R$ 2,00 por km (use o Google Maps para calcular).</p>
+  <p>Siga as etapas: <strong>Aceitei</strong> → <strong>Estou a caminho</strong> → <strong>Entreguei</strong>.</p>
+  <p><strong>Aviso:</strong> Não passe seu contato diretamente para os clientes. O sistema é coletivo. Seja honesto e ético.</p>
+  <hr/>
   <div id="listaPedidos"></div>
 
   <script>
-    // Carrega pedidos do localStorage
     function carregarPedidos() {
       return JSON.parse(localStorage.getItem('pedidos') || '[]');
     }
 
-    // Salva pedidos no localStorage
     function salvarPedidos(pedidos) {
       localStorage.setItem('pedidos', JSON.stringify(pedidos));
     }
 
-    // Atualiza status do pedido
     function atualizarStatus(index, novoStatus) {
       const pedidos = carregarPedidos();
       pedidos[index].status = novoStatus;
@@ -51,13 +45,11 @@
       mostrarPedidos();
     }
 
-    // Cria link para o Google Maps com endereço codificado
     function criarLinkMapa(endereco, texto) {
       const url = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(endereco);
       return `<a href="${url}" target="_blank" class="maps-link">${texto}</a>`;
     }
 
-    // Mostra a lista de pedidos com controles para o motoboy
     function mostrarPedidos() {
       const pedidos = carregarPedidos();
       const lista = document.getElementById('listaPedidos');
@@ -87,8 +79,8 @@
           <label>Atualizar status:
             <select onchange="atualizarStatus(${i}, this.value)">
               <option value="pendente" ${p.status === 'pendente' ? 'selected' : ''}>Pendente</option>
-              <option value="a caminho" ${p.status === 'a caminho' ? 'selected' : ''}>Aceitei e Já Estou A caminho da coleta</option>
-              <option value="entregue" ${p.status === 'entregue' ? 'selected' : ''}>Eu ja Realizei a Entregue</option>
+              <option value="a caminho" ${p.status === 'a caminho' ? 'selected' : ''}>A caminho</option>
+              <option value="entregue" ${p.status === 'entregue' ? 'selected' : ''}>Entregue</option>
             </select>
           </label>
         `;
@@ -97,10 +89,7 @@
     }
 
     mostrarPedidos();
-
-    // Atualiza os pedidos automaticamente a cada 15 segundos
     setInterval(mostrarPedidos, 15000);
   </script>
-
 </body>
 </html>

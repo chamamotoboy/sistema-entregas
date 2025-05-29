@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -5,15 +6,13 @@
   <title>Painel do Administrador</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; max-width: 700px; }
-    .pedido { border: 1px solid #ccc; padding: 10px; margin-bottom: 15px; position: relative; }
-    button { position: absolute; top: 10px; right: 10px; padding: 5px 10px; background: #e74c3c; color: white; border: none; cursor: pointer; }
-    button:hover { background: #c0392b; }
+    .pedido { border: 1px solid #aaa; padding: 10px; margin-bottom: 15px; background: #f9f9f9; }
   </style>
 </head>
 <body>
-
   <h1>Painel do Administrador</h1>
-
+  <p>Visualize todos os pedidos recebidos e seus status.</p>
+  <hr/>
   <div id="listaPedidos"></div>
 
   <script>
@@ -21,47 +20,35 @@
       return JSON.parse(localStorage.getItem('pedidos') || '[]');
     }
 
-    function salvarPedidos(pedidos) {
-      localStorage.setItem('pedidos', JSON.stringify(pedidos));
-    }
-
-    function excluirPedido(index) {
-      if(confirm('Deseja realmente excluir este pedido?')) {
-        const pedidos = carregarPedidos();
-        pedidos.splice(index, 1);
-        salvarPedidos(pedidos);
-        mostrarPedidos();
-      }
-    }
-
     function mostrarPedidos() {
       const pedidos = carregarPedidos();
       const lista = document.getElementById('listaPedidos');
       lista.innerHTML = '';
 
-      if(pedidos.length === 0) {
-        lista.innerHTML = '<p>Nenhum pedido cadastrado.</p>';
+      if (pedidos.length === 0) {
+        lista.innerHTML = '<p>Nenhum pedido encontrado.</p>';
         return;
       }
 
       pedidos.forEach((p, i) => {
         const div = document.createElement('div');
         div.className = 'pedido';
+
         div.innerHTML = `
           <strong>Pedido #${i + 1}</strong><br/>
           Nome: ${p.nome} <br/>
           Telefone: ${p.telefone} <br/>
           Coleta: ${p.enderecoColeta} <br/>
           Entrega: ${p.enderecoEntrega} <br/>
-          Status: <strong>${p.status}</strong>
-          <button onclick="excluirPedido(${i})">Excluir</button>
+          Status: <strong>${p.status}</strong><br/>
         `;
+
         lista.appendChild(div);
       });
     }
 
     mostrarPedidos();
+    setInterval(mostrarPedidos, 15000);
   </script>
-
 </body>
 </html>
