@@ -24,6 +24,10 @@
 <body>
 
   <h1>Painel do Motoboy</h1>
+  <h1>Aqui e onde voc~e motoboy pode aceitar os pedidos que aqui Estão Disponiveis</h1>
+<h1>Sempre que aceitar lembre-se a taxa Minima até 4 km e R$ 8,00 Cobre acima de 5km R$ 2,00 por Km</h1>
+  <h1>SIGA AS ETAPAS ACEITEI E ESTOU A CAMINHO </h1>
+<h1>Eu ja Realizei a Entregua</h1>
 
   <div id="listaPedidos"></div>
 
@@ -82,8 +86,8 @@
           <label>Atualizar status:
             <select onchange="atualizarStatus(${i}, this.value)">
               <option value="pendente" ${p.status === 'pendente' ? 'selected' : ''}>Pendente</option>
-              <option value="a caminho" ${p.status === 'a caminho' ? 'selected' : ''}>A caminho da coleta</option>
-              <option value="entregue" ${p.status === 'entregue' ? 'selected' : ''}>Entregue</option>
+              <option value="a caminho" ${p.status === 'a caminho' ? 'selected' : ''}>Aceitei e Já Estou A caminho da coleta</option>
+              <option value="entregue" ${p.status === 'entregue' ? 'selected' : ''}>Eu ja Realizei a Entregue</option>
             </select>
           </label>
         `;
