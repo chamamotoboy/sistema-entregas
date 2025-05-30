@@ -1,54 +1,63 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <title>Painel do Administrador</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; max-width: 700px; }
-    .pedido { border: 1px solid #aaa; padding: 10px; margin-bottom: 15px; background: #f9f9f9; }
+    body { font-family: Arial, sans-serif; max-width: 700px; margin: 20px auto; }
+    h1 { text-align: center; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 8px; border: 1px solid #ccc; text-align: left; }
+    th { background-color: #f2f2f2; }
   </style>
 </head>
 <body>
+
   <h1>Painel do Administrador</h1>
-  <p>Visualize todos os pedidos recebidos e seus status.</p>
-  <hr/>
-  <div id="listaPedidos"></div>
+  <table>
+    <thead>
+      <tr>
+        <th># Pedido</th>
+        <th>Cliente</th>
+        <th>Endereço</th>
+        <th>Telefone</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody id="corpoTabela"></tbody>
+  </table>
 
   <script>
     function carregarPedidos() {
-      return JSON.parse(localStorage.getItem('pedidos') || '[]');
+      const pedidosJSON = localStorage.getItem('pedidos');
+      return pedidosJSON ? JSON.parse(pedidosJSON) : [];
     }
 
     function mostrarPedidos() {
       const pedidos = carregarPedidos();
-      const lista = document.getElementById('listaPedidos');
-      lista.innerHTML = '';
+      const tbody = document.getElementById('corpoTabela');
+      tbody.innerHTML = '';
 
       if (pedidos.length === 0) {
-        lista.innerHTML = '<p>Nenhum pedido encontrado.</p>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Nenhum pedido encontrado.</td></tr>';
         return;
       }
 
-      pedidos.forEach((p, i) => {
-        const div = document.createElement('div');
-        div.className = 'pedido';
-
-        div.innerHTML = `
-          <strong>Pedido #${i + 1}</strong><br/>
-          Nome: ${p.nome} <br/>
-          Telefone: ${p.telefone} <br/>
-          Coleta: ${p.enderecoColeta} <br/>
-          Entrega: ${p.enderecoEntrega} <br/>
-          Status: <strong>${p.status}</strong><br/>
+      pedidos.forEach((pedido, i) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${i + 1}</td>
+          <td>${pedido.cliente}</td>
+          <td>${pedido.endereco}</td>
+          <td>${pedido.telefone}</td>
+          <td>${pedido.status}</td>
         `;
-
-        lista.appendChild(div);
+        tbody.appendChild(tr);
       });
     }
 
     mostrarPedidos();
-    setInterval(mostrarPedidos, 15000);
   </script>
+
 </body>
 </html>
