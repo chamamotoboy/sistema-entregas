@@ -4,122 +4,98 @@
   <meta charset="UTF-8" />
   <title>Painel do Motoboy</title>
   <style>
-    body { font-family: Arial, sans-serif; max-width: 600px; margin: 20px auto; }
-    h1 { text-align: center; }
-    .pedido { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
-    .btn-status { padding: 8px 12px; border: none; color: #fff; cursor: pointer; margin-top: 10px; }
-    #notificacao { background: #4CAF50; color: white; padding: 10px; text-align: center; display: none; margin-bottom: 20px; }
+    body { font-family: Arial, sans-serif; margin: 20px; max-width: 700px; }
+    .pedido { border: 1px solid #ccc; padding: 10px; margin-bottom: 15px; }
+    button { margin-top: 10px; padding: 6px 12px; }
+    select { margin-top: 8px; }
+    a.maps-link {
+      display: inline-block;
+      margin-top: 6px;
+      margin-right: 10px;
+      color: #3498db;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    a.maps-link:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
 
   <h1>Painel do Motoboy</h1>
-  <div id="notificacao"></div>
+
   <div id="listaPedidos"></div>
 
   <script>
-    // Funções para manipular localStorage
+    // Carrega pedidos do localStorage
     function carregarPedidos() {
-      const pedidosJSON = localStorage.getItem('pedidos');
-      return pedidosJSON ? JSON.parse(pedidosJSON) : [];
+      return JSON.parse(localStorage.getItem('pedidos') || '[]');
     }
+
+    // Salva pedidos no localStorage
     function salvarPedidos(pedidos) {
       localStorage.setItem('pedidos', JSON.stringify(pedidos));
     }
 
-    // Atualiza o status do pedido
-    function atualizarStatus(indice, novoStatus) {
+    // Atualiza status do pedido
+    function atualizarStatus(index, novoStatus) {
       const pedidos = carregarPedidos();
-      if (pedidos[indice]) {
-        pedidos[indice].status = novoStatus;
-        salvarPedidos(pedidos);
-        mostrarPedidos();
-        mostrarNotificacao(`Status do pedido #${indice + 1} atualizado para "${novoStatus}".`);
-      }
+      pedidos[index].status = novoStatus;
+      salvarPedidos(pedidos);
+      mostrarPedidos();
     }
 
-    // Cria botão de status para cada pedido, com o texto e ação conforme status atual
-    function criarBotaoStatus(pedido, indice) {
-      const btn = document.createElement('button');
-      btn.className = 'btn-status';
-
-      if (pedido.status === 'Aguardando motoboy') {
-        btn.textContent = 'Aceitar Entrega';
-        btn.style.backgroundColor = '#2980b9';
-        btn.onclick = () => atualizarStatus(indice, 'Aceito');
-      }
-      else if (pedido.status === 'Aceito') {
-        btn.textContent = 'Ir para coleta';
-        btn.style.backgroundColor = '#f39c12';
-        btn.onclick = () => atualizarStatus(indice, 'A caminho da coleta');
-      }
-      else if (pedido.status === 'A caminho da coleta') {
-        btn.textContent = 'Entrega realizada';
-        btn.style.backgroundColor = '#27ae60';
-        btn.onclick = () => atualizarStatus(indice, 'Entregue');
-      }
-      else if (pedido.status === 'Entregue') {
-        btn.textContent = 'Finalizar';
-        btn.style.backgroundColor = '#34495e';
-        btn.onclick = () => atualizarStatus(indice, 'Finalizado');
-      }
-      else {
-        btn.style.display = 'none';
-      }
-      return btn;
+    // Cria link para o Google Maps com endereço codificado
+    function criarLinkMapa(endereco, texto) {
+      const url = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(endereco);
+      return `<a href="${url}" target="_blank" class="maps-link">${texto}</a>`;
     }
 
-    // Mostra os pedidos na tela do motoboy
+    // Mostra a lista de pedidos com controles para o motoboy
     function mostrarPedidos() {
       const pedidos = carregarPedidos();
       const lista = document.getElementById('listaPedidos');
       lista.innerHTML = '';
 
-      if (pedidos.length === 0) {
-        lista.textContent = 'Nenhum pedido disponível.';
+      if(pedidos.length === 0){
+        lista.innerHTML = '<p>Nenhum pedido encontrado.</p>';
         return;
       }
 
-      pedidos.forEach((pedido, i) => {
+      pedidos.forEach((p, i) => {
         const div = document.createElement('div');
         div.className = 'pedido';
 
+        const linkColeta = criarLinkMapa(p.enderecoColeta, 'Ver Coleta no Maps');
+        const linkEntrega = criarLinkMapa(p.enderecoEntrega, 'Ver Entrega no Maps');
+
         div.innerHTML = `
           <strong>Pedido #${i + 1}</strong><br/>
-          Cliente: ${pedido.cliente}<br/>
-          Endereço: ${pedido.endereco}<br/>
-          Telefone: ${pedido.telefone}<br/>
-          <em>Status: ${pedido.status}</em>
+          Nome: ${p.nome} <br/>
+          Telefone: ${p.telefone} <br/>
+          Coleta: ${p.enderecoColeta} <br/>
+          ${linkColeta} <br/>
+          Entrega: ${p.enderecoEntrega} <br/>
+          ${linkEntrega} <br/>
+          Status: <strong>${p.status}</strong><br/>
+          <label>Atualizar status:
+            <select onchange="atualizarStatus(${i}, this.value)">
+              <option value="pendente" ${p.status === 'pendente' ? 'selected' : ''}>Pendente</option>
+              <option value="a caminho" ${p.status === 'a caminho' ? 'selected' : ''}>A caminho da coleta</option>
+              <option value="entregue" ${p.status === 'entregue' ? 'selected' : ''}>Entregue</option>
+            </select>
+          </label>
         `;
-
-        const btn = criarBotaoStatus(pedido, i);
-        div.appendChild(btn);
-
         lista.appendChild(div);
       });
     }
 
-    // Notificação visual para feedback
-    function mostrarNotificacao(msg) {
-      const n = document.getElementById('notificacao');
-      n.textContent = msg;
-      n.style.display = 'block';
-      setTimeout(() => { n.style.display = 'none'; }, 3500);
-    }
-
-    // Inicializa: criar alguns pedidos exemplo caso não existam
-    function inicializarPedidosExemplo() {
-      if (!localStorage.getItem('pedidos')) {
-        const exemplo = [
-          { cliente: 'João Silva', endereco: 'Rua A, 123', telefone: '99999-9999', status: 'Aguardando motoboy' },
-          { cliente: 'Maria Souza', endereco: 'Av. B, 456', telefone: '98888-8888', status: 'Aguardando motoboy' }
-        ];
-        salvarPedidos(exemplo);
-      }
-    }
-
-    inicializarPedidosExemplo();
     mostrarPedidos();
+
+    // Atualiza os pedidos automaticamente a cada 15 segundos
+    setInterval(mostrarPedidos, 15000);
   </script>
+
 </body>
 </html>

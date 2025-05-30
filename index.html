@@ -2,44 +2,125 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <title>Painel do Cliente</title>
+  <title>Solicitar Entrega - Sistema Simples</title>
   <style>
-    body { font-family: Arial, sans-serif; max-width: 400px; margin: 20px auto; }
-    h1 { text-align: center; }
-    label, input, button { display: block; width: 100%; margin-bottom: 10px; }
-    #statusPedido { margin-top: 20px; font-weight: bold; }
+    body { font-family: Arial, sans-serif; margin: 20px; max-width: 600px; }
+    label { display: block; margin-top: 15px; }
+    input, textarea { width: 100%; padding: 8px; margin-top: 5px; }
+    button { margin-top: 15px; padding: 10px 20px; }
+    .pedido { border: 1px solid #ddd; padding: 10px; margin-top: 15px; }
+    #statusPedido { margin-top: 20px; font-weight: bold; color: #007700; }
   </style>
 </head>
 <body>
 
-  <h1>Consultar Status do Pedido</h1>
-  <label for="pedidoNumero">Número do pedido:</label>
-  <input type="number" id="pedidoNumero" min="1" />
-  <button onclick="consultarStatus()">Consultar</button>
+  <h1>Solicitar Entrega</h1>
 
-  <div id="statusPedido"></div>
+  <form id="formPedido">
+    <label>Nome do Cliente:
+      <input type="text" id="nome" required />
+    </label>
+
+    <label>Telefone:
+      <input type="tel" id="telefone" required />
+    </label>
+
+    <label>Endereço de Coleta:
+      <textarea id="enderecoColeta" rows="2" required></textarea>
+    </label>
+
+    <label>Endereço de Entrega:
+      <textarea id="enderecoEntrega" rows="2" required></textarea>
+    </label>
+
+    <button type="submit">Enviar Pedido</button>
+  </form>
+
+  <h2>Pedidos enviados</h2>
+  <div id="listaPedidos"></div>
+
+  <h2>Status do pedido EXPRESS 0001</h2>
+  <div id="statusPedido">Carregando status...</div>
 
   <script>
-    function carregarPedidos() {
-      const pedidosJSON = localStorage.getItem('pedidos');
-      return pedidosJSON ? JSON.parse(pedidosJSON) : [];
+    // Salvar pedido no localStorage
+    function salvarPedido(pedido) {
+      const pedidos = JSON.parse(localStorage.getItem('pedidos') || '[]');
+      pedidos.push(pedido);
+      localStorage.setItem('pedidos', JSON.stringify(pedidos));
     }
 
-    function consultarStatus() {
-      const num = document.getElementById('pedidoNumero').value;
+    // Mostrar lista de pedidos
+    function mostrarPedidos() {
+      const pedidos = JSON.parse(localStorage.getItem('pedidos') || '[]');
+      const lista = document.getElementById('listaPedidos');
+      lista.innerHTML = '';
+      pedidos.forEach((p, i) => {
+        const div = document.createElement('div');
+        div.className = 'pedido';
+        div.innerHTML = `
+          <strong>Pedido #${i + 1} (${p.id})</strong><br/>
+          Nome: ${p.nome} <br/>
+          Telefone: ${p.telefone} <br/>
+          Coleta: ${p.enderecoColeta} <br/>
+          Entrega: ${p.enderecoEntrega} <br/>
+          Status: ${p.status}
+          <br/><button onclick="atualizarStatus('${p.id}')">Marcar como Entregue</button>
+        `;
+        lista.appendChild(div);
+      });
+    }
+
+    // Atualiza status do pedido para 'entregue'
+    function atualizarStatus(id) {
+      let pedidos = JSON.parse(localStorage.getItem('pedidos') || '[]');
+      pedidos = pedidos.map(p => {
+        if(p.id === id) p.status = 'entregue';
+        return p;
+      });
+      localStorage.setItem('pedidos', JSON.stringify(pedidos));
+      mostrarPedidos();
+    }
+
+    // Atualizar status do pedido EXPRESS 0001 na tela
+    function atualizarStatusPedido() {
+      const pedidos = JSON.parse(localStorage.getItem('pedidos') || '[]');
+      const pedido = pedidos.find(p => p.id === "EXPRESS 0001");
       const statusDiv = document.getElementById('statusPedido');
-      if (!num || num < 1) {
-        statusDiv.textContent = 'Informe um número de pedido válido.';
-        return;
-      }
-      const pedidos = carregarPedidos();
-      const indice = Number(num) - 1;
-      if (pedidos[indice]) {
-        statusDiv.textContent = `Status do pedido #${num}: ${pedidos[indice].status}`;
+      if (pedido) {
+        statusDiv.textContent = `Status atual: ${pedido.status}`;
       } else {
-        statusDiv.textContent = `Pedido #${num} não encontrado.`;
+        statusDiv.textContent = 'Pedido EXPRESS 0001 não encontrado.';
       }
     }
+
+    // Formulário enviado
+    document.getElementById('formPedido').addEventListener('submit', e => {
+      e.preventDefault();
+      // Cria ID EXPRESS com contador incremental
+      const pedidos = JSON.parse(localStorage.getItem('pedidos') || '[]');
+      const novoNumero = pedidos.length + 1;
+      const id = 'EXPRESS ' + novoNumero.toString().padStart(4, '0');
+
+      const pedido = {
+        id: id,
+        nome: document.getElementById('nome').value,
+        telefone: document.getElementById('telefone').value,
+        enderecoColeta: document.getElementById('enderecoColeta').value,
+        enderecoEntrega: document.getElementById('enderecoEntrega').value,
+        status: 'pendente'
+      };
+      salvarPedido(pedido);
+      mostrarPedidos();
+      e.target.reset();
+      alert(`Pedido ${id} enviado!`);
+    });
+
+    // Inicializar
+    mostrarPedidos();
+    atualizarStatusPedido();
+    // Atualizar status a cada 5 segundos
+    setInterval(atualizarStatusPedido, 5000);
   </script>
 
 </body>
