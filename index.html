@@ -2,78 +2,45 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <title>Fazer Pedido - Express Coletas</title>
+  <title>Painel do Cliente</title>
   <style>
-    body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px; }
-    h1 { color: #2c3e50; }
-    label { display: block; margin-top: 10px; }
-    input, textarea, button { width: 100%; padding: 8px; margin-top: 4px; box-sizing: border-box; }
-    button { background: #27ae60; color: white; border: none; cursor: pointer; font-weight: bold; }
-    button:hover { background: #219150; }
-    .container { max-width: 400px; margin: auto; background: white; padding: 20px; border-radius: 6px; box-shadow: 0 0 10px rgba(0,0,0,0.1);}
-    .msg-sucesso { margin-top: 15px; color: green; font-weight: bold; }
+    body { font-family: Arial, sans-serif; max-width: 400px; margin: 20px auto; }
+    h1 { text-align: center; }
+    label, input, button { display: block; width: 100%; margin-bottom: 10px; }
+    #statusPedido { margin-top: 20px; font-weight: bold; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Solicitar Entrega</h1>
-    <form id="formPedido">
-      <label for="nomeCliente">Nome do Cliente</label>
-      <input type="text" id="nomeCliente" required placeholder="Seu nome completo" />
 
-      <label for="telefoneCliente">Telefone</label>
-      <input type="tel" id="telefoneCliente" required placeholder="(99) 99999-9999" />
+  <h1>Consultar Status do Pedido</h1>
+  <label for="pedidoNumero">Número do pedido:</label>
+  <input type="number" id="pedidoNumero" min="1" />
+  <button onclick="consultarStatus()">Consultar</button>
 
-      <label for="enderecoColeta">Endereço de Coleta</label>
-      <textarea id="enderecoColeta" required placeholder="Rua, número, bairro, cidade"></textarea>
-
-      <label for="enderecoEntrega">Endereço de Entrega</label>
-      <textarea id="enderecoEntrega" required placeholder="Rua, número, bairro, cidade"></textarea>
-
-      <button type="submit">Enviar Pedido</button>
-    </form>
-    <div id="msgSucesso" class="msg-sucesso" style="display:none;">Pedido enviado com sucesso! Anote seu ID para acompanhar.</div>
-  </div>
+  <div id="statusPedido"></div>
 
   <script>
-    // Função para gerar ID único no formato EXPRESS 000001
-    function gerarID() {
-      const pedidos = JSON.parse(localStorage.getItem('pedidos') || '[]');
-      const prox = pedidos.length + 1;
-      return 'EXPRESS ' + prox.toString().padStart(6, '0');
+    function carregarPedidos() {
+      const pedidosJSON = localStorage.getItem('pedidos');
+      return pedidosJSON ? JSON.parse(pedidosJSON) : [];
     }
 
-    document.getElementById('formPedido').addEventListener('submit', function(e) {
-      e.preventDefault();
-      const nome = document.getElementById('nomeCliente').value.trim();
-      const tel = document.getElementById('telefoneCliente').value.trim();
-      const coleta = document.getElementById('enderecoColeta').value.trim();
-      const entrega = document.getElementById('enderecoEntrega').value.trim();
-      if(!nome || !tel || !coleta || !entrega) return alert('Preencha todos os campos.');
-
-      const pedidos = JSON.parse(localStorage.getItem('pedidos') || '[]');
-      const novoPedido = {
-        id: gerarID(),
-        nomeCliente: nome,
-        telefoneCliente: tel,
-        enderecoColeta: coleta,
-        enderecoEntrega: entrega,
-        status: 'Aguardando motoboy',
-        motoboyNome: '',
-        motoboyTelefone: '',
-        distancia_km: 0,
-        taxa: 0,
-        hora_coleta: '',
-        hora_entrega: ''
-      };
-      pedidos.push(novoPedido);
-      localStorage.setItem('pedidos', JSON.stringify(pedidos));
-
-      document.getElementById('formPedido').reset();
-      const msg = document.getElementById('msgSucesso');
-      msg.style.display = 'block';
-      msg.textContent = `Pedido enviado! Seu ID: ${novoPedido.id}`;
-    });
+    function consultarStatus() {
+      const num = document.getElementById('pedidoNumero').value;
+      const statusDiv = document.getElementById('statusPedido');
+      if (!num || num < 1) {
+        statusDiv.textContent = 'Informe um número de pedido válido.';
+        return;
+      }
+      const pedidos = carregarPedidos();
+      const indice = Number(num) - 1;
+      if (pedidos[indice]) {
+        statusDiv.textContent = `Status do pedido #${num}: ${pedidos[indice].status}`;
+      } else {
+        statusDiv.textContent = `Pedido #${num} não encontrado.`;
+      }
+    }
   </script>
+
 </body>
 </html>
